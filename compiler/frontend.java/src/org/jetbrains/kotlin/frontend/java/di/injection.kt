@@ -81,7 +81,7 @@ fun createContainerForLazyResolveWithJava(
     )
 
     targetEnvironment.configure(this)
-
+    useImpl<SubstitutingScopeProviderImpl>()
 }.apply {
     initializeJavaSpecificComponents(bindingTrace)
 }
@@ -128,7 +128,6 @@ fun StorageComponentContainer.configureJavaSpecificComponents(
     )
 
     useImpl<FilesByFacadeFqNameIndexer>()
-    useImpl<SubstitutingScopeProviderImpl>()
 }
 
 fun ComponentProvider.initJvmBuiltInsForTopDownAnalysis() {
