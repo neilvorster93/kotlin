@@ -9,7 +9,8 @@ private val storageUnit = DurationUnit.MICROSECONDS
 
 @Suppress("NON_PUBLIC_PRIMARY_CONSTRUCTOR_OF_INLINE_CLASS")
 public inline class Duration internal constructor(internal val _value: Double) : Comparable<Duration> {
-// TODO backend fails:
+// TODO: backend fails on init block, wait for KT-28055
+
 //    init {
 //        require(_value.isNaN().not())
 //    }
@@ -69,6 +70,11 @@ public inline class Duration internal constructor(internal val _value: Double) :
     operator fun times(scale: Int): Duration = Duration(_value * scale)
     operator fun times(scale: Double): Duration = Duration(_value * scale)
 
+    operator fun div(scale: Int): Duration = Duration(_value / scale)
+    operator fun div(scale: Double): Duration = Duration(_value / scale)
+
+    operator fun div(other: Duration): Double = this._value / other._value
+
     fun isNegative(): Boolean = _value < 0
     fun isInfinite(): Boolean = _value.isInfinite()
     fun isFinite(): Boolean = _value.isFinite()
@@ -80,6 +86,9 @@ public inline class Duration internal constructor(internal val _value: Double) :
 
 
     // splitting to components
+
+    // problem: withComponents can be confused with 'wither' function
+    // perhaps better name would be 'letComponents'
 
     inline fun <T> withComponents(action: (hours: Int, minutes: Int, seconds: Int, nanoseconds: Int) -> T): T =
         action(inHours.toInt(), minutesComponent.toInt(), secondsComponent.toInt(), (inNanoseconds % 1e9).toInt())
@@ -128,9 +137,9 @@ public inline class Duration internal constructor(internal val _value: Double) :
             if (isNegative()) append('-')
             append("INFINITY")
         } else {
-            // TODO: Find most appropriate representation
+            // TODO: Find the most appropriate representation
             append(_value)
-            append("us")
+            append(storageUnit.shortName())
         }
     }
 
@@ -139,57 +148,44 @@ public inline class Duration internal constructor(internal val _value: Double) :
         return formatToDecimals(inUnits(unit), decimals, unit.shortName())
     }
 
-    /*
-    fun toIsoString() = buildString {
-        val value = if (this@Duration.value < 0) {
-            append('-')
-            this@Duration.value
-        } else {
-            -this@Duration.value
-        }
-        val unit = storageUnit
-        val unitD = unit.convert(1, DurationUnit.DAYS)
-        val unitH = unit.convert(1, DurationUnit.HOURS)
-        val unitM = unit.convert(1, DurationUnit.MINUTES)
-        val unitS = unit.convert(1, DurationUnit.SECONDS)
-        val unitNS = unit.convert(1, DurationUnit.NANOSECONDS)
 
+    fun toIsoString(): String = buildString {
+        if (isNegative()) append('-')
         append('P')
-        val days = value / unitD
-        val hours = if (unitH != 0L) value % unitD / unitH else 0
-        val minutes = if (unitM != 0L) value % unitH / unitM else 0
-        val seconds = if (unitS != 0L) value % unitM / unitS else 0
-        val ns = if (unitS != 0L) DurationUnit.NANOSECONDS.convert(value % unitS, unit) else 0
+        absoluteValue().withComponents { days, hours, minutes, seconds, nanoseconds ->
+            if (days != 0)
+                append(days).append('D')
 
-        if (days != 0L)
-            append(-days).append('D')
-        if (seconds != 0L || minutes != 0L || hours != 0L || days == 0L) {
-            append('T')
-            val hasHours = hours != 0L || days != 0L
-            val hasSeconds = seconds != 0L || ns != 0L
-            val hasMinutes = minutes != 0L || (hasSeconds && hasHours)
-            if (hasHours) {
-                append(-hours).append('H')
-            }
-            if (hasMinutes) {
-                append(-minutes).append('M')
-            }
-            if (hasSeconds || (!hasHours && !hasMinutes))
-                append(-seconds)
-            if (ns != 0L) {
-                append('.')
-                val nss = (-ns).toString().padStart(9, '0')
-                when {
-                    ns % 1_000_000 == 0L -> append(nss, 0, 3)
-                    ns % 1_000 == 0L -> append(nss, 0, 6)
-                    else -> append(nss)
+
+            if (days == 0 || seconds != 0 || nanoseconds != 0 || minutes != 0 || hours != 0) {
+                append('T')
+                val hasHours = hours != 0 || days != 0
+                val hasSeconds = seconds != 0 || nanoseconds != 0
+                val hasMinutes = minutes != 0 || (hasSeconds && hasHours)
+                if (hasHours) {
+                    append(hours).append('H')
+                }
+                if (hasMinutes) {
+                    append(minutes).append('M')
+                }
+                if (hasSeconds || (!hasHours && !hasMinutes)) {
+                    append(seconds)
+                    if (nanoseconds != 0) {
+                        append('.')
+                        val nss = nanoseconds.toString().padStart(9, '0')
+                        when {
+                            nanoseconds % 1_000_000 == 0 -> append(nss, 0, 3)
+                            nanoseconds % 1_000 == 0 -> append(nss, 0, 6)
+                            else -> append(nss)
+                        }
+                    }
+                    append('S')
                 }
             }
-            append('S')
         }
     }
 
-     */
+
 }
 
 // constructing from number of units
