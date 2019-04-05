@@ -6,6 +6,7 @@
 package test.time
 
 import test.numbers.assertAlmostEquals
+import kotlin.math.*
 import kotlin.test.*
 import kotlin.time.*
 import kotlin.random.*
@@ -34,7 +35,6 @@ class DurationTest {
         }
     }
 
-    // equality white-box testing
     @Test
     fun equality() {
         val data = listOf<Pair<Double, DurationUnit>>(
@@ -119,6 +119,44 @@ class DurationTest {
             val unit2 = units.random()
 
             assertAlmostEquals(convertDurationUnit(value.toDouble(), unit, unit2), Duration(value, unit).inUnits(unit2))
+        }
+    }
+
+    @Test
+    fun componentsOfProperSum() {
+        repeat(100) {
+            val h = Random.nextInt(24)
+            val m = Random.nextInt(60)
+            val s = Random.nextInt(60)
+            val ns = Random.nextInt(1e9.toInt())
+            (h.hours + m.minutes + s.seconds + ns.nanoseconds).run {
+                withComponents { hours, minutes, seconds, nanoseconds ->
+                    assertEquals(h, hours)
+                    assertEquals(m, minutes)
+                    assertEquals(s, seconds)
+                    assertTrue(abs(ns - nanoseconds) < 2, "ns component of duration ${this.toIsoString()} differs too much, expected: $ns, actual: $nanoseconds")
+                }
+                withComponents { days, hours, minutes, seconds, nanoseconds ->
+                    assertEquals(0, days)
+                    assertEquals(h, hours)
+                    assertEquals(m, minutes)
+                    assertEquals(s, seconds)
+                    assertTrue(abs(ns - nanoseconds) < 2)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun componentsOfCarriedSum() {
+        (36.hours + 90.minutes + 90.seconds + 1500.milliseconds).run {
+            withComponents { days, hours, minutes, seconds, nanoseconds ->
+                assertEquals(1, days)
+                assertEquals(13, hours)
+                assertEquals(31, minutes)
+                assertEquals(31, seconds)
+                assertEquals(500_000_000, nanoseconds)
+            }
         }
     }
 
