@@ -329,7 +329,7 @@ class DurationTest {
         test(45.days, "45.0d")
 
         test(40.5.days, "972h")
-        test(40.hours + 15.minutes, "40.3h")
+        test(40.hours + 15.minutes, "40.3h", "40.2h")
         test(40.hours, "40.0h")
 
         test(12.5.hours, "750m")
@@ -354,7 +354,7 @@ class DurationTest {
         test(1.035.microseconds, "1.04us", "1.03us")
         test(1.005.microseconds, "1.01us", "1.00us")
 
-        test(950.5.nanoseconds, "951ns")
+        test(950.5.nanoseconds, "951ns", "950ns")
         test(85.23.nanoseconds, "85.2ns")
         test(8.235.nanoseconds, "8.24ns", "8.23ns")
         test(1.3.nanoseconds, "1.30ns")
