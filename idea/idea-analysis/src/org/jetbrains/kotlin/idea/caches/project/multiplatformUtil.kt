@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType.Companion.ID
 import org.jetbrains.kotlin.idea.project.platform
 import org.jetbrains.kotlin.idea.util.rootManager
+import org.jetbrains.kotlin.types.typeUtil.closure
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.isCommon
 
@@ -74,6 +75,18 @@ val Module.implementedModules: List<Module>
                 },
                 ProjectRootModificationTracker.getInstance(project)
             )
+        }
+    )
+
+val Module.allImplementedModules: List<Module>
+    get() = cached<List<Module>>(
+        CachedValueProvider {
+            val result = if (isNewMPPModule)
+                implementedModules
+            else
+                implementedModules.closure { it.implementedModules }.toList()
+
+            CachedValueProvider.Result(result, ProjectRootModificationTracker.getInstance(project))
         }
     )
 
