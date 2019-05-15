@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.util.isReal
 import org.jetbrains.kotlin.ir.util.original
+import org.jetbrains.kotlin.ir.util.resolveFakeOverride
 
 
 /**
@@ -61,12 +62,12 @@ fun IrSimpleFunction.resolveFakeOverride(allowAbstract: Boolean = false): IrSimp
  */
 internal fun IrSimpleFunction.resolveFakeOverrideMaybeAbstract() = this.resolveFakeOverride(allowAbstract = true)
 
-internal fun IrProperty.resolveFakeOverrideMaybeAbstract() = this.getter!!.resolveFakeOverrideMaybeAbstract().correspondingProperty!!
-
-internal fun IrField.resolveFakeOverrideMaybeAbstract() = this.correspondingProperty!!.getter!!.resolveFakeOverrideMaybeAbstract().correspondingProperty!!.backingField
+internal fun IrProperty.resolveFakeOverrideMaybeAbstract() =
+    this.getter?.resolveFakeOverrideMaybeAbstract()?.correspondingPropertySymbol?.owner ?:
+    this.backingField!!.resolveFakeOverride()!!.correspondingPropertySymbol!!.owner
 
 val IrSimpleFunction.target: IrSimpleFunction
-    get() = (if (modality == Modality.ABSTRACT) this else resolveFakeOverride()).original
+    get() = (if (modality == Modality.ABSTRACT) this else resolveFakeOverride(allowAbstract = false)).original
 
 val IrFunction.target: IrFunction get() = when (this) {
     is IrSimpleFunction -> this.target
