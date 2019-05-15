@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.SourceElement;
 import org.jetbrains.kotlin.load.java.JvmAnnotationNames;
+import org.jetbrains.kotlin.metadata.jvm.deserialization.BitEncoding;
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmBytecodeBinaryVersion;
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmMetadataVersion;
 import org.jetbrains.kotlin.name.ClassId;
@@ -59,6 +60,7 @@ public class ReadKotlinClassHeaderAnnotationVisitor implements AnnotationVisitor
     private String[] strings = null;
     private String[] incompatibleData = null;
     private KotlinClassHeader.Kind headerKind = null;
+    private final List<String> serializedIrFields = new ArrayList<String>();
 
     @Nullable
     public KotlinClassHeader createHeader() {
@@ -88,7 +90,8 @@ public class ReadKotlinClassHeaderAnnotationVisitor implements AnnotationVisitor
                 strings,
                 extraString,
                 extraInt,
-                packageName
+                packageName,
+                BitEncoding.decodeBytes(serializedIrFields.toArray(new String[0]))
         );
     }
 
@@ -160,6 +163,10 @@ public class ReadKotlinClassHeaderAnnotationVisitor implements AnnotationVisitor
             else if (METADATA_PACKAGE_NAME_FIELD_NAME.equals(string)) {
                 if (value instanceof String) {
                     packageName = (String) value;
+                }
+            } else if (string.startsWith(METADATA_SERIALIZED_IR_FIELD_NAME_PREFIX)) {
+                if (value instanceof String) {
+                    serializedIrFields.add((String) value);
                 }
             }
         }

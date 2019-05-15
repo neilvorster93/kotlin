@@ -35,27 +35,34 @@ class ExternalDependenciesGenerator(
     )
 
     fun generateUnboundSymbolsAsDependencies() {
-        stubGenerator.unboundSymbolGeneration = true
-        ArrayList(symbolTable.unboundClasses).forEach {
-            stubGenerator.generateClassStub(it.descriptor)
-        }
-        ArrayList(symbolTable.unboundConstructors).forEach {
-            stubGenerator.generateConstructorStub(it.descriptor)
-        }
-        ArrayList(symbolTable.unboundEnumEntries).forEach {
-            stubGenerator.generateEnumEntryStub(it.descriptor)
-        }
-        ArrayList(symbolTable.unboundFields).forEach {
-            stubGenerator.generateFieldStub(it.descriptor)
-        }
-        ArrayList(symbolTable.unboundSimpleFunctions).forEach {
-            stubGenerator.generateFunctionStub(it.descriptor)
-        }
-        ArrayList(symbolTable.unboundProperties).forEach {
-            stubGenerator.generatePropertyStub(it.descriptor)
-        }
-        ArrayList(symbolTable.unboundTypeParameters).forEach {
-            stubGenerator.generateOrGetTypeParameterStub(it.descriptor)
+        // We need at least one iteration; deserialization may lead to new unbound symbols being produced.
+        var firstRun = true
+        while (firstRun || deserializer?.successfullyInvokedLately == true) {
+            firstRun = false
+            deserializer?.successfullyInvokedLately = false
+
+            stubGenerator.unboundSymbolGeneration = true
+            ArrayList(symbolTable.unboundClasses).forEach {
+                stubGenerator.generateClassStub(it.descriptor)
+            }
+            ArrayList(symbolTable.unboundConstructors).forEach {
+                stubGenerator.generateConstructorStub(it.descriptor)
+            }
+            ArrayList(symbolTable.unboundEnumEntries).forEach {
+                stubGenerator.generateEnumEntryStub(it.descriptor)
+            }
+            ArrayList(symbolTable.unboundFields).forEach {
+                stubGenerator.generateFieldStub(it.descriptor)
+            }
+            ArrayList(symbolTable.unboundSimpleFunctions).forEach {
+                stubGenerator.generateFunctionStub(it.descriptor)
+            }
+            ArrayList(symbolTable.unboundProperties).forEach {
+                stubGenerator.generatePropertyStub(it.descriptor)
+            }
+            ArrayList(symbolTable.unboundTypeParameters).forEach {
+                stubGenerator.generateOrGetTypeParameterStub(it.descriptor)
+            }
         }
 
         deserializer?.declareForwardDeclarations()

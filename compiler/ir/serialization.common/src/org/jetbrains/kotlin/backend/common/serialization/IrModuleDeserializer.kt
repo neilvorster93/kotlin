@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.types.impl.*
 import org.jetbrains.kotlin.ir.util.SymbolTable
 import org.jetbrains.kotlin.ir.util.render
+import org.jetbrains.kotlin.load.java.JavaVisibilities
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.types.Variance
 
@@ -107,7 +108,7 @@ abstract class IrModuleDeserializer(
                 annotations
             )
         }
-        logger.log { "ir_type = $result; render = ${result.render()}" }
+//        logger.log { "ir_type = $result; render = ${result.render()}" }
         return result
 
     }
@@ -810,7 +811,7 @@ abstract class IrModuleDeserializer(
         val operation = proto.operation
         val expression = deserializeOperation(operation, start, end, type)
 
-        logger.log { "### Deserialized expression: ${ir2string(expression)} ir_type=$type" }
+//        logger.log { "### Deserialized expression: ${ir2string(expression)} ir_type=$type" } // parent may not be set, so logging fails
         return expression
     }
 
@@ -887,7 +888,7 @@ abstract class IrModuleDeserializer(
         return parameter
     }
 
-    private fun deserializeIrClass(
+    fun deserializeIrClass(
         proto: KotlinIr.IrClass,
         start: Int,
         end: Int,
@@ -964,6 +965,13 @@ abstract class IrModuleDeserializer(
 
         logger.log { "### deserializing IrFunction ${proto.base.name}" }
         val symbol = deserializeIrSymbol(proto.symbol) as IrSimpleFunctionSymbol
+
+        /*
+           On JVM, certain functions are generated lazily when trying to deserialize their symbol.
+           (those that are eliminated during lowering).
+           Luckily, there's no useful information in their serialized versions either.
+         */
+        if (symbol.isBound) return symbol.owner
 
         val function = symbolTable.declareSimpleFunction(UNDEFINED_OFFSET, UNDEFINED_OFFSET, irrelevantOrigin,
                                                          symbol.descriptor, {
@@ -1062,7 +1070,10 @@ abstract class IrModuleDeserializer(
             "internal" -> Visibilities.INTERNAL
             "invisible_fake" -> Visibilities.INVISIBLE_FAKE // TODO: eventually we should not serialize fake overrides, so this will be gone.
             "local" -> Visibilities.LOCAL
-            else -> error("Unexpected visibility value: $value")
+            "package" -> JavaVisibilities.PACKAGE_VISIBILITY
+            "protected_and_package" -> JavaVisibilities.PROTECTED_AND_PACKAGE
+            "protected_static" -> JavaVisibilities.PROTECTED_STATIC_VISIBILITY
+            else -> error("Unexpected visibility value: ${deserializeString(value.name)}")
         }
     }
 

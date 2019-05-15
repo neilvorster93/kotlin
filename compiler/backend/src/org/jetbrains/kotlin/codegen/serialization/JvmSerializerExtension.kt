@@ -37,7 +37,11 @@ import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.org.objectweb.asm.Type
 import org.jetbrains.org.objectweb.asm.commons.Method
 
-class JvmSerializerExtension(private val bindings: JvmSerializationBindings, state: GenerationState) : SerializerExtension() {
+class JvmSerializerExtension(
+    private val bindings: JvmSerializationBindings,
+    state: GenerationState,
+    private val uniqIdProvider: ((DeclarationDescriptor) -> JvmProtoBuf.DescriptorUniqId?) = { null }
+) : SerializerExtension() {
     private val codegenBinding = state.bindingContext
     private val typeMapper = state.typeMapper
     override val stringTable = JvmCodegenStringTable(typeMapper)
@@ -72,6 +76,9 @@ class JvmSerializerExtension(private val bindings: JvmSerializationBindings, sta
     ) {
         if (moduleName != JvmProtoBufUtil.DEFAULT_MODULE_NAME) {
             proto.setExtension(JvmProtoBuf.classModuleName, stringTable.getStringIndex(moduleName))
+        }
+        uniqIdProvider(descriptor)?.let {
+            proto.setExtension(JvmProtoBuf.classUniqId, it)
         }
 
         val containerAsmType =
@@ -161,6 +168,9 @@ class JvmSerializerExtension(private val bindings: JvmSerializationBindings, sta
                 proto.setExtension(JvmProtoBuf.constructorSignature, signature)
             }
         }
+        uniqIdProvider(descriptor)?.let {
+            proto.setExtension(JvmProtoBuf.constructorUniqId, it)
+        }
     }
 
     override fun serializeFunction(descriptor: FunctionDescriptor,
@@ -172,6 +182,9 @@ class JvmSerializerExtension(private val bindings: JvmSerializationBindings, sta
             if (signature != null) {
                 proto.setExtension(JvmProtoBuf.methodSignature, signature)
             }
+        }
+        uniqIdProvider(descriptor)?.let {
+            proto.setExtension(JvmProtoBuf.functionUniqId, it)
         }
     }
 
@@ -210,6 +223,10 @@ class JvmSerializerExtension(private val bindings: JvmSerializationBindings, sta
             proto.addVersionRequirement(
                 writeVersionRequirement(1, 2, 70, ProtoBuf.VersionRequirement.VersionKind.COMPILER_VERSION, versionRequirementTable)
             )
+        }
+
+        uniqIdProvider(descriptor)?.let {
+            proto.setExtension(JvmProtoBuf.propertyUniqId, it)
         }
     }
 

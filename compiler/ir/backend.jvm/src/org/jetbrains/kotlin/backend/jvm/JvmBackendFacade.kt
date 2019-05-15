@@ -6,11 +6,16 @@
 package org.jetbrains.kotlin.backend.jvm
 
 import org.jetbrains.kotlin.backend.common.phaser.PhaseConfig
+import org.jetbrains.kotlin.backend.jvm.lower.serializeIrFile
+import org.jetbrains.kotlin.backend.jvm.lower.serializeToplevelIrClass
 import org.jetbrains.kotlin.codegen.CompilationErrorHandler
 import org.jetbrains.kotlin.codegen.state.GenerationState
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.MetadataSource
 import org.jetbrains.kotlin.ir.util.ExternalDependenciesGenerator
 import org.jetbrains.kotlin.ir.util.SymbolTable
+import org.jetbrains.kotlin.ir.util.IrDeserializer
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi2ir.Psi2IrTranslator
 import org.jetbrains.kotlin.psi2ir.PsiSourceManager
@@ -35,10 +40,11 @@ object JvmBackendFacade {
         errorHandler: CompilationErrorHandler,
         irModuleFragment: IrModuleFragment,
         psi2irContext: GeneratorContext,
-        phaseConfig: PhaseConfig
+        phaseConfig: PhaseConfig,
+        deserializer: IrDeserializer? = null // TODO: keep track of all the calls to this function
     ) {
         doGenerateFilesInternal(
-            state, errorHandler, irModuleFragment, psi2irContext.symbolTable, psi2irContext.sourceManager, phaseConfig
+            state, errorHandler, irModuleFragment, psi2irContext.symbolTable, psi2irContext.sourceManager, phaseConfig, deserializer
         )
     }
 
@@ -49,6 +55,7 @@ object JvmBackendFacade {
         symbolTable: SymbolTable,
         sourceManager: PsiSourceManager,
         phaseConfig: PhaseConfig,
+        deserializer: IrDeserializer? = null,
         firMode: Boolean = false
     ) {
         val jvmBackendContext = JvmBackendContext(
@@ -59,8 +66,16 @@ object JvmBackendFacade {
             irModuleFragment.descriptor,
             symbolTable,
             irModuleFragment.irBuiltins,
-            JvmGeneratorExtensions.externalDeclarationOrigin
+            JvmGeneratorExtensions.externalDeclarationOrigin,
+            deserializer
         ).generateUnboundSymbolsAsDependencies()
+
+        for (irFile in irModuleFragment.files) {
+            irFile.metadata!!.serializedIr = serializeIrFile(jvmBackendContext, irFile)
+            for (irClass in irFile.declarations.filterIsInstance<IrClass>()) {
+                (irClass.metadata as MetadataSource.Class).serializedIr = serializeToplevelIrClass(jvmBackendContext, irClass)
+            }
+        }
 
         val jvmBackend = JvmBackend(jvmBackendContext)
 

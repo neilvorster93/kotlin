@@ -20,7 +20,6 @@ import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.declarations.*
-import org.jetbrains.kotlin.ir.declarations.impl.IrFieldImpl
 import org.jetbrains.kotlin.ir.declarations.impl.IrValueParameterImpl
 import org.jetbrains.kotlin.ir.declarations.lazy.*
 import org.jetbrains.kotlin.ir.expressions.impl.IrErrorExpressionImpl
@@ -45,7 +44,8 @@ class DeclarationStubGenerator(
         }
 
 
-    private val typeTranslator = TypeTranslator(lazyTable, languageVersionSettings, moduleDescriptor.builtIns, LazyScopedTypeParametersResolver(lazyTable), true)
+    private val typeTranslator =
+        TypeTranslator(lazyTable, languageVersionSettings, moduleDescriptor.builtIns, LazyScopedTypeParametersResolver(lazyTable), true)
     private val constantValueGenerator = ConstantValueGenerator(moduleDescriptor, lazyTable)
 
     init {
@@ -61,22 +61,21 @@ class DeclarationStubGenerator(
         return symbolTable.declareExternalPackageFragment(descriptor)
     }
 
-    fun generateMemberStub(descriptor: DeclarationDescriptor): IrDeclaration =
-        when (descriptor) {
-            is ClassDescriptor ->
-                if (DescriptorUtils.isEnumEntry(descriptor))
-                    generateEnumEntryStub(descriptor)
-                else
-                    generateClassStub(descriptor)
-            is ClassConstructorDescriptor ->
-                generateConstructorStub(descriptor)
-            is FunctionDescriptor ->
-                generateFunctionStub(descriptor)
-            is PropertyDescriptor ->
-                generatePropertyStub(descriptor)
-            else ->
-                throw AssertionError("Unexpected member descriptor: $descriptor")
-        }
+    fun generateMemberStub(descriptor: DeclarationDescriptor): IrDeclaration = when (descriptor) {
+        is ClassDescriptor ->
+            if (DescriptorUtils.isEnumEntry(descriptor))
+                generateEnumEntryStub(descriptor)
+            else
+                generateClassStub(descriptor)
+        is ClassConstructorDescriptor ->
+            generateConstructorStub(descriptor)
+        is FunctionDescriptor ->
+            generateFunctionStub(descriptor)
+        is PropertyDescriptor ->
+            generatePropertyStub(descriptor)
+        else ->
+            throw AssertionError("Unexpected member descriptor: $descriptor")
+    }
 
     private fun computeOrigin(descriptor: DeclarationDescriptor): IrDeclarationOrigin =
         externalDeclarationOrigin?.invoke(descriptor) ?: IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB

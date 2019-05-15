@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.util.isAccessor
 import org.jetbrains.kotlin.ir.util.isGetter
 import org.jetbrains.kotlin.ir.util.isSetter
+import org.jetbrains.kotlin.ir.util.resolveFakeOverride
 import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 
 
@@ -61,7 +62,7 @@ open class DescriptorReferenceSerializer(
         val realDeclaration = if (isFakeOverride) {
             when (declaration) {
                 is IrSimpleFunction -> declaration.resolveFakeOverrideMaybeAbstract()
-                is IrField -> declaration.resolveFakeOverrideMaybeAbstract()
+                is IrField -> declaration.resolveFakeOverride()!!
                 is IrProperty -> declaration.resolveFakeOverrideMaybeAbstract()
                 else -> error("Unexpected fake override declaration")
             }
