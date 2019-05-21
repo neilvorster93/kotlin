@@ -54,6 +54,7 @@ import org.jetbrains.kotlin.platform.js.isJs
 import org.jetbrains.kotlin.platform.jvm.isJvm
 import org.jetbrains.kotlin.platform.konan.isNative
 import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
+import org.jetbrains.kotlin.types.typeUtil.closure
 import org.jetbrains.kotlin.utils.addIfNotNull
 import java.util.*
 
@@ -226,7 +227,9 @@ data class ModuleTestSourceInfo internal constructor(override val module: Module
             list.addIfNotNull(it.productionSourceInfo())
         }
 
-        CachedValueProvider.Result(list, ProjectRootModificationTracker.getInstance(module.project))
+        list.addAll(list.closure { it.expectedBy })
+
+        CachedValueProvider.Result(list.toHashSet(), ProjectRootModificationTracker.getInstance(module.project))
     })
 
     override fun <T> createCachedValueProvider(f: () -> CachedValueProvider.Result<T>) = CachedValueProvider { f() }
