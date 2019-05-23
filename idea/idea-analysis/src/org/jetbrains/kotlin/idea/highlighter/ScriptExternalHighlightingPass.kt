@@ -37,9 +37,6 @@ import com.intellij.openapi.wm.ex.StatusBarEx
 import com.intellij.psi.PsiFile
 import com.intellij.util.ui.UIUtil
 import org.jetbrains.kotlin.idea.core.script.IdeScriptReportSink
-import org.jetbrains.kotlin.idea.core.script.ScriptDefinitionsManager
-import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
-import org.jetbrains.kotlin.idea.core.script.ScriptsCompilationConfigurationUpdater
 import org.jetbrains.kotlin.psi.KtFile
 import kotlin.script.experimental.dependencies.ScriptReport
 
@@ -53,24 +50,6 @@ class ScriptExternalHighlightingPass(
         val document = document ?: return
 
         if (!file.isScript()) return
-
-        if (!ScriptDefinitionsManager.getInstance(file.project).isReady()) {
-            showNotification(
-                file,
-                "Highlighting in scripts is not available until all Script Definitions are loaded"
-            )
-        }
-
-        if (!ScriptsCompilationConfigurationUpdater.areDependenciesCached(file)) {
-            // initiate configuration refinement, if needed
-            ScriptDependenciesManager.getInstance(file.project).getRefinedCompilationConfiguration(file.virtualFile)
-            if (!ScriptsCompilationConfigurationUpdater.areDependenciesCached(file)) {
-                showNotification(
-                    file,
-                    "Highlighting in scripts is not available until all Script Dependencies are loaded"
-                )
-            }
-        }
 
         val reports = file.virtualFile.getUserData(IdeScriptReportSink.Reports) ?: return
 
