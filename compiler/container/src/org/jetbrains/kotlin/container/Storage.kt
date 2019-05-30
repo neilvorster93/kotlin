@@ -16,16 +16,12 @@
 
 package org.jetbrains.kotlin.container
 
-import com.intellij.util.containers.MultiMap
 import java.io.Closeable
 import java.io.PrintStream
-import java.lang.IllegalStateException
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-import java.util.ArrayList
-import java.util.HashSet
-import java.util.LinkedHashSet
+import java.util.*
 
 enum class ComponentStorageState {
     Initial,
@@ -40,7 +36,6 @@ class ComponentStorage(private val myId: String, parent: ComponentStorage?) : Va
     var state = ComponentStorageState.Initial
 
     private val descriptors = LinkedHashSet<ComponentDescriptor>()
-    private val dependencies = MultiMap.createLinkedSet<ComponentDescriptor, Type>()
     private val clashResolvers = ArrayList<PlatformExtensionsClashResolver<*>>()
     private val registry = ComponentRegistry()
 
@@ -81,19 +76,19 @@ class ComponentStorage(private val myId: String, parent: ComponentStorage?) : Va
         if (context is ComponentResolveContext) {
             val descriptor = context.requestingDescriptor
             if (descriptor is ComponentDescriptor) {
-                dependencies.putValue(descriptor, request)
+                descriptor.types.add(request)
             }
         }
     }
 
-    fun dump(printer: PrintStream): Unit = with (printer) {
+    fun dump(printer: PrintStream): Unit = with(printer) {
         val heading = "Container: $myId"
         println(heading)
         println("=".repeat(heading.length))
         println()
         getDescriptorsInDisposeOrder().forEach { descriptor ->
             println(descriptor)
-            dependencies[descriptor].forEach {
+            descriptor.types.forEach {
                 print("   -> ")
                 val typeName = it.toString()
                 print(typeName.substringBefore(" ")) // interface, class
@@ -158,7 +153,10 @@ class ComponentStorage(private val myId: String, parent: ComponentStorage?) : Va
         }
     }
 
-    private fun inspectDependenciesAndRegisterAdhoc(context: ComponentResolveContext, descriptors: Collection<ComponentDescriptor>): LinkedHashSet<ComponentDescriptor> {
+    private fun inspectDependenciesAndRegisterAdhoc(
+        context: ComponentResolveContext,
+        descriptors: Collection<ComponentDescriptor>
+    ): LinkedHashSet<ComponentDescriptor> {
         val adhoc = LinkedHashSet<ComponentDescriptor>()
         val visitedTypes = HashSet<Type>()
         for (descriptor in descriptors) {
@@ -168,8 +166,9 @@ class ComponentStorage(private val myId: String, parent: ComponentStorage?) : Va
         return adhoc
     }
 
-    private fun collectAdhocComponents(context: ComponentResolveContext, descriptor: ComponentDescriptor,
-                                       visitedTypes: HashSet<Type>, adhocDescriptors: LinkedHashSet<ComponentDescriptor>
+    private fun collectAdhocComponents(
+        context: ComponentResolveContext, descriptor: ComponentDescriptor,
+        visitedTypes: HashSet<Type>, adhocDescriptors: LinkedHashSet<ComponentDescriptor>
     ) {
         val dependencies = descriptor.getDependencies(context)
         for (type in dependencies) {
@@ -235,7 +234,7 @@ class ComponentStorage(private val myId: String, parent: ComponentStorage?) : Va
     private fun getDescriptorsInDisposeOrder(): List<ComponentDescriptor> {
         return topologicalSort(descriptors) {
             val dependent = ArrayList<ComponentDescriptor>()
-            for (interfaceType in dependencies[it]) {
+            for (interfaceType in it.types) {
                 for (dependency in registry.tryGetEntry(interfaceType)) {
                     dependent.add(dependency)
                 }

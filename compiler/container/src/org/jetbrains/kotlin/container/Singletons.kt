@@ -30,7 +30,7 @@ enum class ComponentState {
     Disposed
 }
 
-abstract class SingletonDescriptor(val container: ComponentContainer) : ComponentDescriptor, Closeable {
+abstract class SingletonDescriptor(val container: ComponentContainer) : ComponentDescriptor(), Closeable {
     private var instance: Any? = null
     protected var state: ComponentState = ComponentState.Null
     private val disposableObjects by lazy { ArrayList<Closeable>() }

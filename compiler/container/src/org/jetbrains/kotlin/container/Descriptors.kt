@@ -16,17 +16,20 @@
 
 package org.jetbrains.kotlin.container
 
+import com.intellij.util.containers.ContainerUtil
 import java.lang.reflect.*
 
 interface ValueDescriptor {
     fun getValue(): Any
 }
 
-internal interface ComponentDescriptor : ValueDescriptor {
-    fun getRegistrations(): Iterable<Type>
-    fun getDependencies(context: ValueResolveContext): Collection<Type>
-    val shouldInjectProperties: Boolean
+abstract class ComponentDescriptor() : ValueDescriptor {
+    abstract fun getRegistrations(): Iterable<Type>
+    abstract fun getDependencies(context: ValueResolveContext): Collection<Type>
+    open val shouldInjectProperties: Boolean
         get() = false
+
+    val types = ContainerUtil.newConcurrentSet<Type>()
 }
 
 class IterableDescriptor(val descriptors: Iterable<ValueDescriptor>) : ValueDescriptor {

@@ -18,7 +18,7 @@ package org.jetbrains.kotlin.container
 
 import java.lang.reflect.*
 
-open class InstanceComponentDescriptor(val instance: Any) : ComponentDescriptor {
+open class InstanceComponentDescriptor(val instance: Any) : ComponentDescriptor() {
 
     override fun getValue(): Any = instance
     override fun getRegistrations(): Iterable<Type> = instance::class.java.getInfo().registrations
