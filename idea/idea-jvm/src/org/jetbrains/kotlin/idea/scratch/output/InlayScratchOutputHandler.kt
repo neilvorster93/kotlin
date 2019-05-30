@@ -74,9 +74,9 @@ object InlayScratchOutputHandler : ScratchOutputHandler {
                 if (shortText != text) {
                     printToToolWindow(file, expression, output)
                 }
-                editor.inlayModel.addInlineElement(
+                editor.inlayModel.addAfterLineEndElement(
                     lineEndOffset,
-                    true,
+                    false,
                     InlayScratchFileRenderer(" ".repeat(spaceCount) + shortText, output.type)
                 )
             }
@@ -110,7 +110,7 @@ object InlayScratchOutputHandler : ScratchOutputHandler {
     private fun clearInlays(editor: TextEditor) {
         UIUtil.invokeLaterIfNeeded {
             editor
-                .editor.inlayModel.getInlineElementsInRange(0, editor.editor.document.textLength)
+                .editor.inlayModel.getAfterLineEndElementsInRange(0, editor.editor.document.textLength)
                 .filter { it.renderer is InlayScratchFileRenderer }
                 .forEach { Disposer.dispose(it) }
         }
