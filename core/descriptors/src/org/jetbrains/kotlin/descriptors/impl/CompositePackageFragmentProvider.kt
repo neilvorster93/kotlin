@@ -19,11 +19,14 @@ package org.jetbrains.kotlin.descriptors.impl
 import org.jetbrains.kotlin.descriptors.PackageFragmentDescriptor
 import org.jetbrains.kotlin.descriptors.PackageFragmentProvider
 import org.jetbrains.kotlin.name.FqName
-import java.util.*
 import org.jetbrains.kotlin.name.Name
+import java.util.*
+
+interface SmartEmptyPackageFragmentProvider
 
 class CompositePackageFragmentProvider(// can be modified from outside
-        private val providers: List<PackageFragmentProvider>) : PackageFragmentProvider {
+    val providers: List<PackageFragmentProvider>
+) : PackageFragmentProvider {
 
     override fun getPackageFragments(fqName: FqName): List<PackageFragmentDescriptor> {
         val result = ArrayList<PackageFragmentDescriptor>()
@@ -31,6 +34,13 @@ class CompositePackageFragmentProvider(// can be modified from outside
             result.addAll(provider.getPackageFragments(fqName))
         }
         return result.toList()
+    }
+
+    override fun isEmpty(fqName: FqName): Boolean {
+        for (provider in providers) {
+            if (!provider.isEmpty(fqName)) return false
+        }
+        return true
     }
 
     override fun getSubPackagesOf(fqName: FqName, nameFilter: (Name) -> Boolean): Collection<FqName> {

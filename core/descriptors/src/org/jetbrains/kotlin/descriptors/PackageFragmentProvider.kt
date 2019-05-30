@@ -24,6 +24,8 @@ interface PackageFragmentProvider {
 
     fun getSubPackagesOf(fqName: FqName, nameFilter: (Name) -> Boolean): Collection<FqName>
 
+    fun isEmpty(fqName: FqName): Boolean = getPackageFragments(fqName).isEmpty()
+
 
     object Empty : PackageFragmentProvider {
         override fun getPackageFragments(fqName: FqName) = emptyList<PackageFragmentDescriptor>()

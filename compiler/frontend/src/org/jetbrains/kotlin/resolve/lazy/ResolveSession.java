@@ -174,6 +174,11 @@ public class ResolveSession implements KotlinCodeAnalyzer, LazyClassContext {
                 return ContainerUtil.createMaybeSingletonList(getPackageFragment(fqName));
             }
 
+            @Override
+            public boolean isEmpty(@NotNull FqName fqName) {
+                return getPackageFragments(fqName).isEmpty();
+            }
+
             @NotNull
             @Override
             public Collection<FqName> getSubPackagesOf(

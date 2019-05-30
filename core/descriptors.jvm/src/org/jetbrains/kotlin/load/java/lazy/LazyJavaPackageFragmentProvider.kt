@@ -22,6 +22,8 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.storage.CacheWithNotNullValues
 
+
+
 class LazyJavaPackageFragmentProvider(
     components: JavaResolverComponents
 ) : PackageFragmentProvider {
@@ -37,6 +39,10 @@ class LazyJavaPackageFragmentProvider(
         return packageFragments.computeIfAbsent(fqName) {
             LazyJavaPackageFragment(c, jPackage)
         }
+    }
+
+    override fun isEmpty(fqName: FqName): Boolean {
+        return c.components.finder.findPackage(fqName) != null
     }
 
     override fun getPackageFragments(fqName: FqName) = listOfNotNull(getPackageFragment(fqName))

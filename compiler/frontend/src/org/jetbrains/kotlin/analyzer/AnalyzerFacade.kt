@@ -356,8 +356,8 @@ class LazyModuleDependencies<M : ModuleInfo>(
 }
 
 
-private class DelegatingPackageFragmentProvider<M : ModuleInfo>(
-    private val resolverForProject: ResolverForProjectImpl<M>,
+class DelegatingPackageFragmentProvider<M : ModuleInfo>(
+    val resolverForProject: ResolverForProjectImpl<M>,
     private val module: ModuleDescriptor,
     moduleContent: ModuleContent<M>,
     private val packageOracle: PackageOracle
