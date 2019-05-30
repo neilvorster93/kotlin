@@ -47,7 +47,10 @@ class ScratchFileHook(val project: Project) : ProjectComponent {
             ScratchFileAutoRunner.addListener(project, editor)
         }
 
-        override fun fileClosed(source: FileEditorManager, file: VirtualFile) {}
+        override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+            val (editor, panel) = getEditorWithScratchPanel(source, file) ?: return
+            editor.removeScratchPanel()
+        }
     }
 
     private fun isPluggable(file: VirtualFile): Boolean {
