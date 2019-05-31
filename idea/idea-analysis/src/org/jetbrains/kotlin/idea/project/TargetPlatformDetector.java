@@ -18,20 +18,19 @@ package org.jetbrains.kotlin.idea.project;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import kotlin.collections.CollectionsKt;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.kotlin.platform.DefaultIdeTargetPlatformKindProvider;
-import org.jetbrains.kotlin.platform.IdePlatformKind;
+import org.jetbrains.kotlin.idea.compiler.IDELanguageSettingsProviderKt;
+import org.jetbrains.kotlin.platform.*;
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms;
 import org.jetbrains.kotlin.psi.KtCodeFragment;
 import org.jetbrains.kotlin.psi.KtFile;
 import org.jetbrains.kotlin.psi.KtPsiFactoryKt;
-import org.jetbrains.kotlin.platform.TargetPlatform;
-import org.jetbrains.kotlin.platform.SimplePlatform;
 import org.jetbrains.kotlin.scripting.definitions.DefinitionsKt;
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinition;
 
@@ -64,14 +63,7 @@ public class TargetPlatformDetector {
         if (file.isScript()) {
             ScriptDefinition scriptDefinition = DefinitionsKt.findScriptDefinition(file);
             if (scriptDefinition != null) {
-                String platformNameFromScriptDefinition = scriptDefinition.getPlatform();
-                for (TargetPlatform compilerPlatform : IdePlatformKind.Companion.getAll_PLATFORMS()) {
-                    // FIXME(dsavvinov): get rid of matching by name
-                    SimplePlatform simplePlatform = CollectionsKt.single(compilerPlatform);
-                    if (simplePlatform.getPlatformName().equals(platformNameFromScriptDefinition)) {
-                        return compilerPlatform;
-                    }
-                }
+                return getPlatform(file.getProject(), scriptDefinition);
             }
         }
 
@@ -89,6 +81,31 @@ public class TargetPlatformDetector {
     @NotNull
     public static TargetPlatform getPlatform(@NotNull Module module) {
         return ProjectStructureUtil.getCachedPlatformForModule(module);
+    }
+
+    @NotNull
+    public static TargetPlatform getPlatform(@NotNull Project project, @NotNull ScriptDefinition scriptDefinition) {
+        String platformNameFromScriptDefinition = scriptDefinition.getPlatform();
+        TargetPlatformVersion targetPlatformForScriptDefinition =
+                IDELanguageSettingsProviderKt.getTargetPlatformForScripts(project, scriptDefinition);
+        if (!targetPlatformForScriptDefinition.equals(TargetPlatformVersion.NoVersion.INSTANCE)) {
+            for (TargetPlatform compilerPlatform : IdePlatformKind.Companion.getAll_PLATFORMS()) {
+                SimplePlatform simplePlatform = CollectionsKt.single(compilerPlatform);
+                if (simplePlatform.getTargetPlatformVersion() == targetPlatformForScriptDefinition) {
+                    return compilerPlatform;
+                }
+            }
+        }
+
+        for (TargetPlatform compilerPlatform : IdePlatformKind.Companion.getAll_PLATFORMS()) {
+            // FIXME(dsavvinov): get rid of matching by name
+            SimplePlatform simplePlatform = CollectionsKt.single(compilerPlatform);
+            if (simplePlatform.getPlatformName().equals(platformNameFromScriptDefinition)) {
+                return compilerPlatform;
+            }
+        }
+
+        return DefaultIdeTargetPlatformKindProvider.Companion.getDefaultPlatform();
     }
 
 }
