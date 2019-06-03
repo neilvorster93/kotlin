@@ -97,7 +97,7 @@ val ModuleDescriptor.implementingDescriptors: List<ModuleDescriptor>
         return implementingModuleInfos.mapNotNull { it.toDescriptor() }
     }
 
-private fun Module.toInfo(type: SourceType): ModuleSourceInfo? = when (type) {
+fun Module.toInfo(type: SourceType): ModuleSourceInfo? = when (type) {
     PRODUCTION -> productionSourceInfo()
     TEST -> testSourceInfo()
 }
@@ -116,7 +116,7 @@ val ModuleDescriptor.implementedDescriptors: List<ModuleDescriptor>
         return moduleSourceInfo.expectedBy.mapNotNull { it.toDescriptor() }
     }
 
-private fun ModuleSourceInfo.toDescriptor() = KotlinCacheService.getInstance(module.project)
+fun ModuleSourceInfo.toDescriptor() = KotlinCacheService.getInstance(module.project)
     .getResolutionFacadeByModuleInfo(this, platform)?.moduleDescriptor
 
 fun PsiElement.getPlatformModuleInfo(desiredPlatform: TargetPlatform): PlatformModuleInfo? {
