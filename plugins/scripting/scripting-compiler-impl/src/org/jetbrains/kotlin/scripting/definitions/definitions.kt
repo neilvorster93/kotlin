@@ -29,9 +29,12 @@ fun VirtualFile.findScriptDefinition(project: Project): ScriptDefinition? {
     // Do not use psiFile.script here because this method can be called during indexes access
     // and accessing stubs may cause deadlock
     // TODO: measure performance effect and if necessary consider detecting indexing here or using separate logic for non-IDE operations to speed up filtering
-
-    if (runReadAction { PsiManager.getInstance(project).findFile(this) as? KtFile }/*?.script*/ == null) return null
-
+    try {
+        val ktFile = runReadAction { PsiManager.getInstance(project).findFile(this) as? KtFile }
+        if (ktFile/*?.script*/ == null) return null
+    } catch (e: Throwable) {
+        // ignore, do not prevent finding script definition by name
+    }
     return findScriptDefinitionByFileName(project, name)
 }
 
