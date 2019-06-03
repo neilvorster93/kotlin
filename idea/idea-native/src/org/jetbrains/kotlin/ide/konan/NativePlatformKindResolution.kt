@@ -44,6 +44,20 @@ class NativePlatformKindResolution : IdePlatformKindResolution {
             .map { file -> NativeLibraryInfo(project, library, file) }
     }
 
+    override fun createPlatformSpecificPackageFragmentProvider(
+        moduleInfo: ModuleInfo,
+        storageManager: StorageManager,
+        languageVersionSettings: LanguageVersionSettings,
+        moduleDescriptor: ModuleDescriptor
+    ): PackageFragmentProvider? {
+        val konanLibrary = moduleInfo.getCapability(NativeLibraryInfo.NATIVE_LIBRARY_CAPABILITY) ?: return null
+        return konanLibrary.createPackageFragmentProvider(
+            storageManager,
+            languageVersionSettings,
+            moduleDescriptor
+        )
+    }
+
     override fun isLibraryFileForPlatform(virtualFile: VirtualFile): Boolean {
         return when {
             // The virtual file for a library packed in a ZIP file will have path like "/some/path/to/the/file.klib!/",
