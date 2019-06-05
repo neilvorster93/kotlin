@@ -22,7 +22,6 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.containers.ContainerUtil
-import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.cfg.ControlFlowInformationProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.context.SimpleGlobalContext
@@ -35,6 +34,7 @@ import org.jetbrains.kotlin.idea.caches.resolve.CodeFragmentAnalyzer
 import org.jetbrains.kotlin.idea.caches.resolve.util.analyzeControlFlow
 import org.jetbrains.kotlin.idea.caches.trackers.KotlinCodeBlockModificationListener
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.forEachDescendantOfType
 import org.jetbrains.kotlin.psi.psiUtil.getElementTextWithContext
@@ -78,7 +78,7 @@ class ResolveElementCache(
             CachedValueProvider<MutableMap<KtElement, ResolveElementCache.CachedFullResolve>> {
                 CachedValueProvider.Result.create(
                     ContainerUtil.createConcurrentWeakKeySoftValueMap<KtElement, CachedFullResolve>(),
-                    PsiModificationTracker.OUT_OF_CODE_BLOCK_MODIFICATION_COUNT,
+                    KotlinCodeBlockModificationListener.getInstance(project).kotlinOutOfCodeBlockTracker,
                     resolveSession.exceptionTracker
                 )
             },
