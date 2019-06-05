@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.asJava.classes.FakeLightClassForFileOfPackage
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.jetbrains.kotlin.asJava.elements.KtLightElement
+import org.jetbrains.kotlin.caches.project.cachedByRootModifications
 import org.jetbrains.kotlin.idea.caches.lightClasses.KtLightClassForDecompiledDeclaration
 import org.jetbrains.kotlin.idea.core.isInTestSourceContentKotlinAware
 import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
@@ -28,7 +29,9 @@ import org.jetbrains.kotlin.idea.util.isKotlinBinary
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.kotlin.scripting.definitions.scriptDefinitionByFileName
+import org.jetbrains.kotlin.types.typeUtil.lazyClosure
 import org.jetbrains.kotlin.utils.addIfNotNull
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.jetbrains.kotlin.utils.sure
 import org.jetbrains.kotlin.utils.yieldIfNotNull
 
@@ -39,6 +42,15 @@ fun PsiElement.getModuleInfo(): IdeaModuleInfo = this.collectInfos(ModuleInfoCol
 fun PsiElement.getNullableModuleInfo(): IdeaModuleInfo? = this.collectInfos(ModuleInfoCollector.NullableTakeFirst)
 
 fun PsiElement.getModuleInfos(): Sequence<IdeaModuleInfo> = this.collectInfos(ModuleInfoCollector.ToSequence)
+
+fun ModuleInfo.findSdkAcrossDependencies(): SdkInfo? {
+    fun ModuleInfo.doFindSdk(): SdkInfo? = dependencies().lazyClosure { it.dependencies() }.firstIsInstanceOrNull<SdkInfo>()
+
+    return if (this is ModuleSourceInfo)
+        module.cachedByRootModifications { doFindSdk() }
+    else
+        doFindSdk()
+}
 
 fun getModuleInfoByVirtualFile(project: Project, virtualFile: VirtualFile): IdeaModuleInfo? =
     collectInfosByVirtualFile(

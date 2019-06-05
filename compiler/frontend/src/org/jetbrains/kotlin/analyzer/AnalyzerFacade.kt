@@ -39,7 +39,6 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.TargetPlatformVersion
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.storage.StorageManager
 import org.jetbrains.kotlin.storage.getValue
 import java.util.*
@@ -95,7 +94,7 @@ class ResolverForProjectImpl<M : ModuleInfo>(
     private val resolverForModuleFactoryByPlatform: (TargetPlatform?) -> ResolverForModuleFactory,
     override val builtIns: KotlinBuiltIns = DefaultBuiltIns.Instance,
     private val delegateResolver: ResolverForProject<M> = EmptyResolverForProject(),
-    private val firstDependency: M? = null,
+    private val sdkDependency: (M) -> M?,
     private val packageOracleFactory: PackageOracleFactory = PackageOracleFactory.OptimisticFactory,
     private val invalidateOnOOCB: Boolean = true,
     private val isReleaseCoroutines: Boolean? = null
@@ -139,7 +138,7 @@ class ResolverForProjectImpl<M : ModuleInfo>(
             LazyModuleDependencies(
                 projectContext.storageManager,
                 module,
-                firstDependency,
+                sdkDependency(module),
                 this
             )
         )

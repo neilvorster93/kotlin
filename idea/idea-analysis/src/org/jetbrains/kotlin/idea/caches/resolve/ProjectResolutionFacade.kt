@@ -169,7 +169,12 @@ internal class ProjectResolutionFacade(
             },
             builtIns = builtIns,
             delegateResolver = delegateResolverForProject,
-            firstDependency = settings.sdk?.let { SdkInfo(project, it) },
+            sdkDependency = { module ->
+                if (settings is PlatformAnalysisSettingsImpl)
+                    settings.sdk?.let { SdkInfo(project, it) }
+                else
+                    module.sdk?.let { SdkInfo(project, it) }
+            },
             packageOracleFactory = ServiceManager.getService(project, IdePackageOracleFactory::class.java),
             invalidateOnOOCB = invalidateOnOOCB,
             isReleaseCoroutines = settings.isReleaseCoroutines
