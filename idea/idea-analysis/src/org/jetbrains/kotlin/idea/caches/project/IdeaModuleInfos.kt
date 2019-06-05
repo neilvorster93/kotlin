@@ -26,6 +26,7 @@ import org.jetbrains.kotlin.analyzer.CombinedModuleInfo
 import org.jetbrains.kotlin.analyzer.LibraryModuleInfo
 import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.analyzer.TrackableModuleInfo
+import org.jetbrains.kotlin.caches.project.cached
 import org.jetbrains.kotlin.caches.resolve.resolution
 import org.jetbrains.kotlin.config.SourceKotlinRootType
 import org.jetbrains.kotlin.config.TestSourceKotlinRootType
@@ -183,12 +184,9 @@ sealed class ModuleSourceInfoWithExpectedBy(private val forProduction: Boolean) 
             return expectedByModules.mapNotNull { if (forProduction) it.productionSourceInfo() else it.testSourceInfo() }
         }
 
-    override fun dependencies(): List<IdeaModuleInfo> = module.cached(createCachedValueProvider {
-        CachedValueProvider.Result(
-            ideaModelDependencies(module, forProduction, platform),
-            ProjectRootModificationTracker.getInstance(module.project)
-        )
-    })
+    override fun dependencies(): List<IdeaModuleInfo> = module.cached(ProjectRootModificationTracker.getInstance(module.project)) {
+        ideaModelDependencies(module, forProduction, platform)
+    }
 
     // NB: CachedValueProvider must exist separately in Production / Test source info,
     // otherwise caching does not work properly
@@ -223,7 +221,7 @@ data class ModuleTestSourceInfo internal constructor(override val module: Module
 
     override fun contentScope(): GlobalSearchScope = enlargedSearchScope(ModuleTestSourceScope(module), module, isTestScope = true)
 
-    override fun modulesWhoseInternalsAreVisible() = module.cached(CachedValueProvider {
+    override fun modulesWhoseInternalsAreVisible(): Collection<ModuleInfo> = module.cached(ProjectRootModificationTracker.getInstance(module.project)) {
         val list = SmartList<ModuleInfo>()
 
         list.addIfNotNull(module.productionSourceInfo())
@@ -234,8 +232,8 @@ data class ModuleTestSourceInfo internal constructor(override val module: Module
 
         list.addAll(list.closure { it.expectedBy })
 
-        CachedValueProvider.Result(list.toHashSet(), ProjectRootModificationTracker.getInstance(module.project))
-    })
+        list.toHashSet()
+    }
 
     override fun <T> createCachedValueProvider(f: () -> CachedValueProvider.Result<T>) = CachedValueProvider { f() }
 }
