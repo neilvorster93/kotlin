@@ -987,7 +987,7 @@ open class FirBodyResolveTransformer(val session: FirSession, val implicitTypeOn
 private fun inferenceComponents(session: FirSession, jump: ReturnTypeCalculatorWithJump) =
     InferenceComponents(object : ConeInferenceContext, TypeSystemInferenceExtensionContextDelegate {
         override fun findCommonIntegerLiteralTypesSuperType(explicitSupertypes: List<SimpleTypeMarker>): SimpleTypeMarker? {
-            //TODO wtf
+            //TODO wtf3324
             return explicitSupertypes.firstOrNull()
         }
 

@@ -8,7 +8,6 @@ package org.jetbrains.kotlin.fir.types
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.FirSymbolProviderAwareSession
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.expandedConeType
 import org.jetbrains.kotlin.fir.declarations.superConeTypes
@@ -51,9 +50,9 @@ interface ConeTypeContext : TypeSystemContext, TypeSystemOptimizationContext {
 
     override fun SimpleTypeMarker.fastCorrespondingSupertypes(constructor: TypeConstructorMarker): List<SimpleTypeMarker>? {
         require(this is ConeLookupTagBasedType)
-        return (session as? FirSymbolProviderAwareSession)
-            ?.correspondingSupertypesCache
-            ?.getCorrespondingSupertypes(this, constructor)
+
+        val q = session._correspondingSupertypesCache as? FirCorrespondingSupertypesCache ?: return null
+        return q.getCorrespondingSupertypes(this, constructor)
     }
 
     override fun SimpleTypeMarker.isIntegerLiteralType(): Boolean {
