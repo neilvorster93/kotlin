@@ -43,4 +43,9 @@ public class MultiplatformAnalysisTestGenerated extends AbstractMultiplatformAna
     public void testInternalFromProduction() throws Exception {
         runTest("idea/testData/multiplatform/internalFromProduction/");
     }
+
+    @TestMetadata("useCorrectBuiltIns")
+    public void testUseCorrectBuiltIns() throws Exception {
+        runTest("idea/testData/multiplatform/useCorrectBuiltIns/");
+    }
 }
