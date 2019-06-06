@@ -279,6 +279,9 @@ class DurationTest {
         // negative
         assertEquals("-PT23H45M", (-1.days + 15.minutes).toIsoString())
         assertEquals("-PT24H15M", (-1.days - 15.minutes).toIsoString())
+
+        // infinite
+        assertEquals("PT2147483647H", Duration.INFINITE.toIsoString())
     }
 
     @Test
