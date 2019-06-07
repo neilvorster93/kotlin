@@ -22,18 +22,13 @@ public final class JvmIr {
     long getId();
 
     /**
-     * <code>required string toplevel_fq_name = 2;</code>
+     * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
      */
     boolean hasToplevelFqName();
     /**
-     * <code>required string toplevel_fq_name = 2;</code>
+     * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
      */
-    java.lang.String getToplevelFqName();
-    /**
-     * <code>required string toplevel_fq_name = 2;</code>
-     */
-    org.jetbrains.kotlin.protobuf.ByteString
-        getToplevelFqNameBytes();
+    org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String getToplevelFqName();
   }
   /**
    * Protobuf type {@code org.jetbrains.kotlin.backend.common.serialization.UniqIdInfo}
@@ -91,9 +86,16 @@ public final class JvmIr {
               break;
             }
             case 18: {
-              org.jetbrains.kotlin.protobuf.ByteString bs = input.readBytes();
+              org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = toplevelFqName_.toBuilder();
+              }
+              toplevelFqName_ = input.readMessage(org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(toplevelFqName_);
+                toplevelFqName_ = subBuilder.buildPartial();
+              }
               bitField0_ |= 0x00000002;
-              toplevelFqName_ = bs;
               break;
             }
           }
@@ -146,50 +148,23 @@ public final class JvmIr {
     }
 
     public static final int TOPLEVEL_FQ_NAME_FIELD_NUMBER = 2;
-    private java.lang.Object toplevelFqName_;
+    private org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String toplevelFqName_;
     /**
-     * <code>required string toplevel_fq_name = 2;</code>
+     * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
      */
     public boolean hasToplevelFqName() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required string toplevel_fq_name = 2;</code>
+     * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
      */
-    public java.lang.String getToplevelFqName() {
-      java.lang.Object ref = toplevelFqName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        org.jetbrains.kotlin.protobuf.ByteString bs = 
-            (org.jetbrains.kotlin.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          toplevelFqName_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>required string toplevel_fq_name = 2;</code>
-     */
-    public org.jetbrains.kotlin.protobuf.ByteString
-        getToplevelFqNameBytes() {
-      java.lang.Object ref = toplevelFqName_;
-      if (ref instanceof java.lang.String) {
-        org.jetbrains.kotlin.protobuf.ByteString b = 
-            org.jetbrains.kotlin.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        toplevelFqName_ = b;
-        return b;
-      } else {
-        return (org.jetbrains.kotlin.protobuf.ByteString) ref;
-      }
+    public org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String getToplevelFqName() {
+      return toplevelFqName_;
     }
 
     private void initFields() {
       id_ = 0L;
-      toplevelFqName_ = "";
+      toplevelFqName_ = org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -205,6 +180,10 @@ public final class JvmIr {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!getToplevelFqName().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -216,7 +195,7 @@ public final class JvmIr {
         output.writeInt64(1, id_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, getToplevelFqNameBytes());
+        output.writeMessage(2, toplevelFqName_);
       }
       output.writeRawBytes(unknownFields);
     }
@@ -233,7 +212,7 @@ public final class JvmIr {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += org.jetbrains.kotlin.protobuf.CodedOutputStream
-          .computeBytesSize(2, getToplevelFqNameBytes());
+          .computeMessageSize(2, toplevelFqName_);
       }
       size += unknownFields.size();
       memoizedSerializedSize = size;
@@ -331,7 +310,7 @@ public final class JvmIr {
         super.clear();
         id_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000001);
-        toplevelFqName_ = "";
+        toplevelFqName_ = org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.getDefaultInstance();
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
@@ -374,9 +353,7 @@ public final class JvmIr {
           setId(other.getId());
         }
         if (other.hasToplevelFqName()) {
-          bitField0_ |= 0x00000002;
-          toplevelFqName_ = other.toplevelFqName_;
-          
+          mergeToplevelFqName(other.getToplevelFqName());
         }
         setUnknownFields(
             getUnknownFields().concat(other.unknownFields));
@@ -389,6 +366,10 @@ public final class JvmIr {
           return false;
         }
         if (!hasToplevelFqName()) {
+          
+          return false;
+        }
+        if (!getToplevelFqName().isInitialized()) {
           
           return false;
         }
@@ -446,79 +427,63 @@ public final class JvmIr {
         return this;
       }
 
-      private java.lang.Object toplevelFqName_ = "";
+      private org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String toplevelFqName_ = org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.getDefaultInstance();
       /**
-       * <code>required string toplevel_fq_name = 2;</code>
+       * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
        */
       public boolean hasToplevelFqName() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required string toplevel_fq_name = 2;</code>
+       * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
        */
-      public java.lang.String getToplevelFqName() {
-        java.lang.Object ref = toplevelFqName_;
-        if (!(ref instanceof java.lang.String)) {
-          org.jetbrains.kotlin.protobuf.ByteString bs =
-              (org.jetbrains.kotlin.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            toplevelFqName_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
+      public org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String getToplevelFqName() {
+        return toplevelFqName_;
       }
       /**
-       * <code>required string toplevel_fq_name = 2;</code>
+       * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
        */
-      public org.jetbrains.kotlin.protobuf.ByteString
-          getToplevelFqNameBytes() {
-        java.lang.Object ref = toplevelFqName_;
-        if (ref instanceof String) {
-          org.jetbrains.kotlin.protobuf.ByteString b = 
-              org.jetbrains.kotlin.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          toplevelFqName_ = b;
-          return b;
-        } else {
-          return (org.jetbrains.kotlin.protobuf.ByteString) ref;
+      public Builder setToplevelFqName(org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String value) {
+        if (value == null) {
+          throw new NullPointerException();
         }
+        toplevelFqName_ = value;
+
+        bitField0_ |= 0x00000002;
+        return this;
       }
       /**
-       * <code>required string toplevel_fq_name = 2;</code>
+       * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
        */
       public Builder setToplevelFqName(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        toplevelFqName_ = value;
-        
+          org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.Builder builderForValue) {
+        toplevelFqName_ = builderForValue.build();
+
+        bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>required string toplevel_fq_name = 2;</code>
+       * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
+       */
+      public Builder mergeToplevelFqName(org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String value) {
+        if (((bitField0_ & 0x00000002) == 0x00000002) &&
+            toplevelFqName_ != org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.getDefaultInstance()) {
+          toplevelFqName_ =
+            org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.newBuilder(toplevelFqName_).mergeFrom(value).buildPartial();
+        } else {
+          toplevelFqName_ = value;
+        }
+
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .org.jetbrains.kotlin.backend.common.serialization.String toplevel_fq_name = 2;</code>
        */
       public Builder clearToplevelFqName() {
+        toplevelFqName_ = org.jetbrains.kotlin.backend.common.serialization.KotlinIr.String.getDefaultInstance();
+
         bitField0_ = (bitField0_ & ~0x00000002);
-        toplevelFqName_ = getDefaultInstance().getToplevelFqName();
-        
-        return this;
-      }
-      /**
-       * <code>required string toplevel_fq_name = 2;</code>
-       */
-      public Builder setToplevelFqNameBytes(
-          org.jetbrains.kotlin.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        toplevelFqName_ = value;
-        
         return this;
       }
 

@@ -58,16 +58,13 @@ class JvmIrDeserializer(
         val toplevelDescriptor = descriptor.toToplevel()
         val irModule = stubGenerator.generateOrGetEmptyExternalPackageFragmentStub(toplevelDescriptor.containingDeclaration as PackageFragmentDescriptor)
 
-        lateinit var auxTables: JvmIr.AuxTables
         if (toplevelDescriptor is ClassDescriptor) {
             val classHeader = (toplevelDescriptor.source as? KotlinJvmBinarySourceElement)?.binaryClass?.classHeader ?: return null
             if (classHeader.serializedIr == null || classHeader.serializedIr!!.size == 0) return null
 
             val irProto = JvmIr.JvmIrClass.parseFrom(classHeader.serializedIr)
-            consumeUniqIdTable(irProto.auxTables.uniqIdTable)
-            auxTables = irProto.auxTables
-            println("class")
-            val moduleDeserializer = ModuleDeserializer(moduleDescriptor, auxTables)
+            val moduleDeserializer = ModuleDeserializer(moduleDescriptor, irProto.auxTables)
+            consumeUniqIdTable(irProto.auxTables.uniqIdTable, moduleDeserializer)
             val deserializedToplevel = moduleDeserializer.deserializeIrClass(
                 irProto.irClass,
                 UNDEFINED_OFFSET, UNDEFINED_OFFSET,
@@ -84,10 +81,9 @@ class JvmIrDeserializer(
 
             val irProto = JvmIr.JvmIrFile.parseFrom(classHeader.serializedIr)
 
-            consumeUniqIdTable(irProto.auxTables.uniqIdTable)
-            auxTables = irProto.auxTables
+            val moduleDeserializer = ModuleDeserializer(moduleDescriptor, irProto.auxTables)
+            consumeUniqIdTable(irProto.auxTables.uniqIdTable, moduleDeserializer)
 
-            val moduleDeserializer = ModuleDeserializer(moduleDescriptor, auxTables)
             for (declaration in irProto.declarationContainer.declarationList) {
                 val member = moduleDeserializer.deserializeDeclaration(declaration, irModule)
                 irModule.declarations.add(member)
@@ -100,10 +96,10 @@ class JvmIrDeserializer(
 
     }
 
-    private fun consumeUniqIdTable(table: JvmIr.UniqIdTable) {
+    private fun consumeUniqIdTable(table: JvmIr.UniqIdTable, moduleDeserializer: ModuleDeserializer) {
         for (entry in table.infosList) {
             val id = entry.id
-            val toplevelFqName = FqName(entry.toplevelFqName)
+            val toplevelFqName = FqName(moduleDeserializer.deserializeString(entry.toplevelFqName))
             val oldFqName = knownToplevelFqNames[id]
             assert(oldFqName == null || oldFqName == toplevelFqName) { "FqName table clash: $oldFqName vs $toplevelFqName" }
             knownToplevelFqNames[id] = toplevelFqName
@@ -115,7 +111,9 @@ class JvmIrDeserializer(
 
     override fun declareForwardDeclarations() {}
 
-    inner class ModuleDeserializer(val moduleDescriptor: ModuleDescriptor, val auxTables: JvmIr.AuxTables) : IrModuleDeserializer(logger, builtIns, symbolTable) {
+    inner class ModuleDeserializer(val moduleDescriptor: ModuleDescriptor, val auxTables: JvmIr.AuxTables) :
+        IrModuleDeserializer(logger, builtIns, symbolTable) {
+
         val descriptorReferenceDeserializer = JvmDescriptorReferenceDeserializer(moduleDescriptor, uniqIdAware)
 
         private var moduleLoops = mutableMapOf<Int, IrLoopBase>()

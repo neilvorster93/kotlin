@@ -60,6 +60,14 @@ class JvmIrModuleSerializer(
 
     private fun serializeAuxTables(idMap: Map<Long, FqName>): JvmIr.AuxTables {
         val proto = JvmIr.AuxTables.newBuilder()
+        proto.uniqIdTable = JvmIr.UniqIdTable.newBuilder() // This should come before serializing stringTable.
+            .addAllInfos(idMap.toList().map { (id, fqName) ->
+                JvmIr.UniqIdInfo.newBuilder()
+                    .setId(id)
+                    .setToplevelFqName(serializeString(fqName.asString()))
+                    .build()
+            })
+            .build()
         proto.symbolTable = KotlinIr.IrSymbolTable.newBuilder()
             .addAllSymbols(protoSymbolArray)
             .build()
@@ -68,14 +76,6 @@ class JvmIrModuleSerializer(
             .build()
         proto.stringTable = KotlinIr.StringTable.newBuilder()
             .addAllStrings(protoStringArray)
-            .build()
-        proto.uniqIdTable = JvmIr.UniqIdTable.newBuilder()
-            .addAllInfos(idMap.toList().map { (id, fqName) ->
-                JvmIr.UniqIdInfo.newBuilder()
-                    .setId(id)
-                    .setToplevelFqName(fqName.asString())
-                    .build()
-            })
             .build()
         return proto.build()
     }

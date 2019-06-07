@@ -9,7 +9,7 @@ option optimize_for = LITE_RUNTIME;
 
 message UniqIdInfo {
   required int64 id = 1;
-  required string toplevel_fq_name = 2;
+  required String toplevel_fq_name = 2;
 }
 
 message UniqIdTable {
