@@ -12,7 +12,7 @@ plugins {
 }
 
 val verifyDependencyOutput: Boolean by rootProject.extra
-val intellijUltimateEnabled: Boolean = (rootProject.extra["intellijUltimateEnabled"] as Boolean?) == true
+val intellijUltimateEnabled: Boolean by rootProject.extra
 val intellijReleaseType: String by rootProject.extra
 val intellijVersion = rootProject.extra["versions.intellijSdk"] as String
 val asmVersion = rootProject.findProperty("versions.jar.asm-all") as String?

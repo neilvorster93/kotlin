@@ -56,11 +56,11 @@ class KotlinBuildProperties(
     val useBootstrapStdlib: Boolean
         get() = isInJpsBuildIdeaSync
 
-    val includeCidrPlugins: Boolean =
-        getBoolean("cidrPluginsEnabled") && propertiesProvider.rootProjectDir.resolve("kotlin-ultimate").exists()
+    val kotlinUltimateExists: Boolean = propertiesProvider.rootProjectDir.resolve("kotlin-ultimate").exists()
 
-    val intellijUltimateEnabled: Boolean =
-        getBoolean("intellijUltimateEnabled") && propertiesProvider.rootProjectDir.resolve("kotlin-ultimate").exists()
+    val includeCidrPlugins: Boolean = kotlinUltimateExists && getBoolean("cidrPluginsEnabled")
+
+    val intellijUltimateEnabled: Boolean = kotlinUltimateExists && getBoolean("intellijUltimateEnabled")
 }
 
 private const val extensionName = "kotlinBuildFlags"
