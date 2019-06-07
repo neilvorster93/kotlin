@@ -28,7 +28,7 @@ class ExternalDependenciesGenerator(
     val symbolTable: SymbolTable,
     val irBuiltIns: IrBuiltIns,
     externalDeclarationOrigin: ((DeclarationDescriptor) -> IrDeclarationOrigin)? = null,
-    private val deserializer: IrDeserializer? = null
+    private val deserializer: IrDeserializer?
 ) {
     private val stubGenerator = DeclarationStubGenerator(
         moduleDescriptor, symbolTable, irBuiltIns.languageVersionSettings, externalDeclarationOrigin, deserializer

@@ -16,7 +16,7 @@
 
 package org.jetbrains.kotlin.backend.jvm
 
-import org.jetbrains.kotlin.backend.common.LoggingContext
+import org.jetbrains.kotlin.backend.common.EmptyLoggingContext
 import org.jetbrains.kotlin.backend.common.phaser.PhaseConfig
 import org.jetbrains.kotlin.codegen.*
 import org.jetbrains.kotlin.codegen.state.GenerationState
@@ -26,26 +26,12 @@ import org.jetbrains.kotlin.ir.util.SymbolTable
 import org.jetbrains.kotlin.ir.backend.jvm.lower.serialization.ir.JvmIrDeserializer
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi2ir.Psi2IrTranslator
 import org.jetbrains.kotlin.psi2ir.PsiSourceManager
 
 class JvmIrCodegenFactory(private val phaseConfig: PhaseConfig) : CodegenFactory {
 
-    /**///TODO
-    val logger = object : LoggingContext {
-        override var inVerbosePhase = false
-        override fun log(message: () -> String) {
-            println(message())
-        }
-    }
-
     override fun generateModule(state: GenerationState, files: Collection<KtFile>, errorHandler: CompilationErrorHandler) {
-        val psi2ir = Psi2IrTranslator(state.languageVersionSettings)
-        val psi2irContext = psi2ir.createGeneratorContext(state.module, state.bindingContext, extensions = JvmGeneratorExtensions)
-        val deserializer =
-            JvmIrDeserializer(state.module, logger, psi2irContext.irBuiltIns, psi2irContext.symbolTable, state.languageVersionSettings)
-        val irModuleFragment = psi2ir.generateModuleFragment(psi2irContext, files, deserializer)
-        JvmBackendFacade.doGenerateFilesInternal(state, errorHandler, irModuleFragment, psi2irContext, phaseConfig, deserializer)
+        JvmBackendFacade.doGenerateFiles(files, state, errorHandler, phaseConfig)
     }
 
     fun generateModuleInFrontendIRMode(
@@ -55,7 +41,8 @@ class JvmIrCodegenFactory(private val phaseConfig: PhaseConfig) : CodegenFactory
         symbolTable: SymbolTable,
         sourceManager: PsiSourceManager
     ) {
-        val deserializer = JvmIrDeserializer(state.module, logger, irModuleFragment.irBuiltins, symbolTable, state.languageVersionSettings)
+        val deserializer =
+            JvmIrDeserializer(state.module, EmptyLoggingContext, irModuleFragment.irBuiltins, symbolTable, state.languageVersionSettings)
         JvmBackendFacade.doGenerateFilesInternal(
             state, errorHandler, irModuleFragment, symbolTable, sourceManager, phaseConfig, deserializer, firMode = true
         )

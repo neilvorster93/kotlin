@@ -37,7 +37,7 @@ class JvmIrDeserializer(
     val logger: LoggingContext,
     val builtIns: IrBuiltIns,
     val symbolTable: SymbolTable,
-    val languageVersionSettings: LanguageVersionSettings // TODO: tmp
+    val languageVersionSettings: LanguageVersionSettings
 ) : IrDeserializer {
 
     override var successfullyInvokedLately: Boolean = false
@@ -46,7 +46,7 @@ class JvmIrDeserializer(
 
     private val deserializedSymbols = mutableMapOf<UniqIdKey, IrSymbol>()
 
-    val stubGenerator = DeclarationStubGenerator(module, symbolTable, languageVersionSettings) // no deserializer!!
+    val stubGenerator = DeclarationStubGenerator(module, symbolTable, languageVersionSettings, deserializer = null)
     val uniqIdAware = JvmDescriptorUniqIdAware(symbolTable, stubGenerator)
 
     override fun findDeserializedDeclaration(symbol: IrSymbol): IrDeclaration? {
