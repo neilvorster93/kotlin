@@ -24,8 +24,8 @@ class JvmIrModuleSerializer(
     logger: LoggingContext,
     declarationTable: DeclarationTable,
     val psiSourceManager: PsiSourceManager,
-    bodiesOnlyForInlines: Boolean = true
-) : IrModuleSerializer(logger, declarationTable, JvmMangler, bodiesOnlyForInlines) {
+    externallyVisibleOnly: Boolean = true
+) : IrModuleSerializer(logger, declarationTable, JvmMangler, externallyVisibleOnly) {
 
     // Usage protocol: construct an instance, call only one of `serializeIrFile()` and `serializeTopLevelClass()` only once.
 

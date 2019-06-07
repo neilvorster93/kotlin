@@ -15,7 +15,7 @@ fun serializeIrFile(context: JvmBackendContext, irFile: IrFile): ByteArray {
         context,
         context.declarationTable,
         context.psiSourceManager,
-        bodiesOnlyForInlines = true
+        externallyVisibleOnly = true
     ).serializeJvmIrFile(irFile).toByteArray()
 }
 
@@ -25,7 +25,7 @@ fun serializeToplevelIrClass(context: JvmBackendContext, irClass: IrClass): Byte
         context,
         context.declarationTable,
         context.psiSourceManager,
-        bodiesOnlyForInlines = true
+        externallyVisibleOnly = true
     ).serializeJvmToplevelClass(irClass)
         .toByteArray()
 }
