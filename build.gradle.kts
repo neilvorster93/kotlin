@@ -183,6 +183,7 @@ extra["versions.ktor-network"] = "1.0.1"
 if (!project.hasProperty("versions.kotlin-native")) {
     extra["versions.kotlin-native"] = "1.3-dev-9780"
 }
+
 val isTeamcityBuild = project.hasProperty("teamcity") || System.getenv("TEAMCITY_VERSION") != null
 val intellijUltimateEnabled by extra(project.kotlinBuildProperties.intellijUltimateEnabled || isTeamcityBuild)
 val effectSystemEnabled by extra(project.getBooleanProperty("kotlin.compiler.effectSystemEnabled") ?: false)

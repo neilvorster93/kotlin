@@ -69,7 +69,7 @@ rootProject.apply {
 val flags = LocalBuildProperties(project)
 
 val isTeamcityBuild = project.hasProperty("teamcity") || System.getenv("TEAMCITY_VERSION") != null
-val intellijUltimateEnabled: Boolean = flags.intellijUltimateEnabled
+val intellijUltimateEnabled: Boolean by extra(flags.intellijUltimateEnabled)
 val intellijSeparateSdks by extra(project.getBooleanProperty("intellijSeparateSdks") ?: false)
 val verifyDependencyOutput by extra( getBooleanProperty("kotlin.build.dependency.output.verification") ?: isTeamcityBuild)
 
@@ -81,8 +81,6 @@ else
 extra["versions.androidDxSources"] = "5.0.0_r2"
 
 extra["customDepsOrg"] = "kotlin.build"
-
-extra["intellijUltimateEnabled"] = intellijUltimateEnabled
 
 repositories {
     maven("https://jetbrains.bintray.com/intellij-third-party-dependencies/")
@@ -123,6 +121,7 @@ allprojects {
     }
 }
 
+// TODO: These classes should be omitted once Gradle plugin supports local.properties
 class LocalBuildPropertiesProvider(private val project: Project) {
     private val localProperties: Properties = Properties()
 
