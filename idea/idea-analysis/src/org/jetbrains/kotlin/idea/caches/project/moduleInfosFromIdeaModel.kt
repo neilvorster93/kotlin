@@ -15,6 +15,8 @@ import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ProjectRootModificationTracker
 import com.intellij.psi.util.CachedValueProvider
+import org.jetbrains.kotlin.caches.project.cached
+import org.jetbrains.kotlin.caches.project.cachedByRootModifications
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.isCommon
 import org.jetbrains.kotlin.types.typeUtil.closure
@@ -22,9 +24,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 /** null-platform means that we should get all modules */
 fun getModuleInfosFromIdeaModel(project: Project, platform: TargetPlatform? = null): List<IdeaModuleInfo> {
-    val modelInfosCache = project.cached(CachedValueProvider {
-        CachedValueProvider.Result(collectModuleInfosFromIdeaModel(project), ProjectRootModificationTracker.getInstance(project))
-    })
+    val modelInfosCache = project.cachedByRootModifications {
+        collectModuleInfosFromIdeaModel(project)
+    }
 
     return if (platform != null)
         modelInfosCache.forPlatform(platform)

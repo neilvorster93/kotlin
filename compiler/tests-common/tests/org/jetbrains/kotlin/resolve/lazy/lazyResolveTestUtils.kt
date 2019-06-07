@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.analyzer.LanguageSettingsProvider
 import org.jetbrains.kotlin.analyzer.ModuleContent
 import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.analyzer.ResolverForProjectImpl
+import org.jetbrains.kotlin.builtins.DefaultBuiltIns
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
@@ -54,7 +55,9 @@ fun createResolveSessionForFiles(
         moduleLanguageSettingsProvider = LanguageSettingsProvider.Default,
         resolverForModuleFactoryByPlatform = {
             JvmResolverForModuleFactory(platformParameters, CompilerEnvironment, JvmPlatforms.defaultJvmPlatform)
-        }
+        },
+        builtInsProvider = { DefaultBuiltIns.Instance },
+        sdkDependency = { null }
     )
     return resolverForProject.resolverForModule(testModule).componentProvider.get<ResolveSession>()
 }
