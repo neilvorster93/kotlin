@@ -60,7 +60,9 @@ class KotlinBuildProperties(
 
     val includeCidrPlugins: Boolean = kotlinUltimateExists && getBoolean("cidrPluginsEnabled")
 
-    val intellijUltimateEnabled: Boolean = kotlinUltimateExists && getBoolean("intellijUltimateEnabled")
+    val isTeamcityBuild: Boolean = getBoolean("teamcity") || System.getenv("TEAMCITY_VERSION") != null
+
+    val intellijUltimateEnabled: Boolean = kotlinUltimateExists && (getBoolean("intellijUltimateEnabled") || isTeamcityBuild)
 }
 
 private const val extensionName = "kotlinBuildFlags"

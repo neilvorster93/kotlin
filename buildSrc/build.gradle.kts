@@ -68,8 +68,8 @@ rootProject.apply {
 
 val flags = LocalBuildProperties(project)
 
-val isTeamcityBuild = project.hasProperty("teamcity") || System.getenv("TEAMCITY_VERSION") != null
-val intellijUltimateEnabled: Boolean by extra(flags.intellijUltimateEnabled)
+val isTeamcityBuild = flags.isTeamcityBuild
+val intellijUltimateEnabled by extra(flags.intellijUltimateEnabled)
 val intellijSeparateSdks by extra(project.getBooleanProperty("intellijSeparateSdks") ?: false)
 val verifyDependencyOutput by extra( getBooleanProperty("kotlin.build.dependency.output.verification") ?: isTeamcityBuild)
 
@@ -141,6 +141,9 @@ class LocalBuildPropertiesProvider(private val project: Project) {
 class LocalBuildProperties(project: Project) {
     val propertiesProvider = LocalBuildPropertiesProvider(project)
 
+    val isTeamcityBuild = propertiesProvider.getString("teamcity") != null || System.getenv("TEAMCITY_VERSION") != null
+
     val intellijUltimateEnabled =
-        propertiesProvider.getBoolean("intellijUltimateEnabled") && propertiesProvider.rootProjectDir.resolve("kotlin-ultimate").exists()
+        (propertiesProvider.getBoolean("intellijUltimateEnabled") || isTeamcityBuild)
+                && propertiesProvider.rootProjectDir.resolve("kotlin-ultimate").exists()
 }
