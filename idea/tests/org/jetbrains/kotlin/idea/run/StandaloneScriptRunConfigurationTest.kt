@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.test.JUnit3WithIdeaConfigurationRunner
 import org.jetbrains.kotlin.utils.PathUtil
 import org.junit.Assert
 import org.junit.runner.RunWith
+import java.io.File
 import kotlin.test.assertNotEquals
 
 @RunWith(JUnit3WithIdeaConfigurationRunner::class)
@@ -39,6 +40,7 @@ class StandaloneScriptRunConfigurationTest : KotlinCodeInsightTestCase() {
 
         programParametersList.checkParameter("-script") { it.contains("simpleScript.kts") }
         programParametersList.checkParameter("-kotlin-home") { it == PathUtil.kotlinPathsForIdeaPlugin.homePath.path }
+        programParametersList.checkParameter("-cp") { !it.contains(File(testProjectJdk.homePath!!).path) }
     }
 
     fun testOnFileRename() {
