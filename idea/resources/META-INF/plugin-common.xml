@@ -1843,7 +1843,7 @@
                      displayName="Unused symbol"
                      groupPath="Kotlin"
                      groupName="Redundant constructs"
-                     enabledByDefault="true"
+                     enabledByDefault="false"
                      level="WARNING"
                      runForWholeFile="true"
                      language="kotlin"
