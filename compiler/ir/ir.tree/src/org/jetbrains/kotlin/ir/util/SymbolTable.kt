@@ -28,10 +28,8 @@ import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.impl.IrUninitializedType
 
 interface IrDeserializer {
-    fun findDeserializedDeclaration(symbol: IrSymbol): IrDeclaration?
+    fun findDeserializedDeclaration(symbol: IrSymbol, backoff: (IrSymbol) -> IrDeclaration): IrDeclaration?
     fun declareForwardDeclarations()
-
-    var successfullyInvokedLately: Boolean
 }
 
 interface ReferenceSymbolTable {

@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.backend.common.phaser.invokeToplevel
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer
 import org.jetbrains.kotlin.ir.backend.js.utils.JsMainFunctionDetector
+import org.jetbrains.kotlin.ir.util.EmptyDeserializer
 import org.jetbrains.kotlin.ir.util.ExternalDependenciesGenerator
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.library.KotlinLibrary
@@ -55,7 +56,7 @@ fun compile(
         moduleDescriptor = moduleDescriptor,
         symbolTable = symbolTable,
         irBuiltIns = irBuiltIns,
-        deserializer = null
+        deserializer = EmptyDeserializer
     ).generateUnboundSymbolsAsDependencies()
     moduleFragment.patchDeclarationParents()
 

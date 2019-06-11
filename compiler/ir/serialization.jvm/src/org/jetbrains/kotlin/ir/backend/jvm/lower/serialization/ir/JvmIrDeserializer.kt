@@ -20,13 +20,9 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrAnonymousInitializerSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrValueParameterSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrVariableSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.util.DeclarationStubGenerator
-import org.jetbrains.kotlin.ir.util.IrDeserializer
-import org.jetbrains.kotlin.ir.util.SymbolTable
-import org.jetbrains.kotlin.ir.util.patchDeclarationParents
+import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
-import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.descriptorUtil.module
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedClassDescriptor
@@ -40,61 +36,56 @@ class JvmIrDeserializer(
     val languageVersionSettings: LanguageVersionSettings
 ) : IrDeserializer {
 
-    override var successfullyInvokedLately: Boolean = false
-
     val knownToplevelFqNames = mutableMapOf<Long, FqName>()
 
     private val deserializedSymbols = mutableMapOf<UniqIdKey, IrSymbol>()
 
-    val stubGenerator = DeclarationStubGenerator(module, symbolTable, languageVersionSettings, deserializer = null)
-    val uniqIdAware = JvmDescriptorUniqIdAware(symbolTable, stubGenerator)
-
-    override fun findDeserializedDeclaration(symbol: IrSymbol): IrDeclaration? {
+    override fun findDeserializedDeclaration(symbol: IrSymbol, backoff: (IrSymbol) -> IrDeclaration): IrDeclaration? {
+        if (symbol.isBound) return symbol.owner as IrDeclaration
         val descriptor =
             symbol.descriptor as? DeserializedMemberDescriptor ?: symbol.descriptor as? DeserializedClassDescriptor
-            ?: return null
+            ?: return backoff(symbol)
         val moduleDescriptor = descriptor.module
 
         val toplevelDescriptor = descriptor.toToplevel()
-        val irModule = stubGenerator.generateOrGetEmptyExternalPackageFragmentStub(toplevelDescriptor.containingDeclaration as PackageFragmentDescriptor)
+        val packageFragment = symbolTable.findOrDeclareExternalPackageFragment(toplevelDescriptor.containingDeclaration as PackageFragmentDescriptor)
 
         if (toplevelDescriptor is ClassDescriptor) {
-            val classHeader = (toplevelDescriptor.source as? KotlinJvmBinarySourceElement)?.binaryClass?.classHeader ?: return null
-            if (classHeader.serializedIr == null || classHeader.serializedIr!!.size == 0) return null
+            val classHeader = (toplevelDescriptor.source as? KotlinJvmBinarySourceElement)?.binaryClass?.classHeader ?: return backoff(symbol)
+            if (classHeader.serializedIr == null || classHeader.serializedIr!!.size == 0) return backoff(symbol)
 
             val irProto = JvmIr.JvmIrClass.parseFrom(classHeader.serializedIr)
-            val moduleDeserializer = ModuleDeserializer(moduleDescriptor, irProto.auxTables)
+            val moduleDeserializer = ModuleDeserializer(moduleDescriptor, irProto.auxTables, backoff)
             consumeUniqIdTable(irProto.auxTables.uniqIdTable, moduleDeserializer)
             val deserializedToplevel = moduleDeserializer.deserializeIrClass(
                 irProto.irClass,
                 UNDEFINED_OFFSET, UNDEFINED_OFFSET,
                 IrDeclarationOrigin.IR_EXTERNAL_DECLARATION_STUB
             )
-            deserializedToplevel.patchDeclarationParents(irModule) // TODO: toplevel's parent should be the module
+            deserializedToplevel.patchDeclarationParents(packageFragment) // TODO: toplevel's parent should be the module
             assert(symbol.isBound)
-            successfullyInvokedLately = true
             return symbol.owner as IrDeclaration
         } else {
-            val jvmPackagePartSource = (descriptor as DeserializedMemberDescriptor).containerSource as? JvmPackagePartSource ?: return null
-            val classHeader = jvmPackagePartSource.knownJvmBinaryClass?.classHeader ?: return null
-            if (classHeader.serializedIr == null || classHeader.serializedIr!!.size == 0) return null
+            val jvmPackagePartSource = (descriptor as DeserializedMemberDescriptor).containerSource as? JvmPackagePartSource ?: return backoff(symbol)
+            val classHeader = jvmPackagePartSource.knownJvmBinaryClass?.classHeader ?: return backoff(symbol)
+            if (classHeader.serializedIr == null || classHeader.serializedIr!!.size == 0) return backoff(symbol)
 
             val irProto = JvmIr.JvmIrFile.parseFrom(classHeader.serializedIr)
 
-            val moduleDeserializer = ModuleDeserializer(moduleDescriptor, irProto.auxTables)
+            val moduleDeserializer = ModuleDeserializer(moduleDescriptor, irProto.auxTables, backoff)
             consumeUniqIdTable(irProto.auxTables.uniqIdTable, moduleDeserializer)
 
             for (declaration in irProto.declarationContainer.declarationList) {
-                val member = moduleDeserializer.deserializeDeclaration(declaration, irModule)
-                irModule.declarations.add(member)
+                val member = moduleDeserializer.deserializeDeclaration(declaration, packageFragment)
+                packageFragment.declarations.add(member)
             }
-            irModule.patchDeclarationParents(irModule)
+            packageFragment.patchDeclarationParents(packageFragment)
             assert(symbol.isBound)
-            successfullyInvokedLately = true
             return symbol.owner as IrDeclaration
         }
-
     }
+
+    override fun declareForwardDeclarations() {}
 
     private fun consumeUniqIdTable(table: JvmIr.UniqIdTable, moduleDeserializer: ModuleDeserializer) {
         for (entry in table.infosList) {
@@ -109,10 +100,14 @@ class JvmIrDeserializer(
     private tailrec fun DeclarationDescriptor.toToplevel(): DeclarationDescriptor =
         if (containingDeclaration is PackageFragmentDescriptor) this else containingDeclaration!!.toToplevel()
 
-    override fun declareForwardDeclarations() {}
-
-    inner class ModuleDeserializer(val moduleDescriptor: ModuleDescriptor, val auxTables: JvmIr.AuxTables) :
+    inner class ModuleDeserializer(
+        val moduleDescriptor: ModuleDescriptor,
+        val auxTables: JvmIr.AuxTables,
+        backoff: (IrSymbol) -> IrDeclaration
+    ) :
         IrModuleDeserializer(logger, builtIns, symbolTable) {
+
+        val uniqIdAware = JvmDescriptorUniqIdAware(symbolTable, backoff)
 
         val descriptorReferenceDeserializer = JvmDescriptorReferenceDeserializer(moduleDescriptor, uniqIdAware)
 

@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
+import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.source.PsiSourceElement
 import org.jetbrains.kotlin.types.KotlinType
@@ -508,3 +509,27 @@ val IrDeclaration.file: IrFile get() = parent.let {
         else -> TODO("Unexpected declaration parent")
     }
 }
+
+fun SymbolTable.referenceMember(descriptor: DeclarationDescriptor): IrSymbol = when (descriptor) {
+    is ClassDescriptor ->
+        if (DescriptorUtils.isEnumEntry(descriptor))
+            referenceEnumEntry(descriptor)
+        else
+            referenceClass(descriptor)
+    is ClassConstructorDescriptor ->
+        referenceConstructor(descriptor)
+    is FunctionDescriptor ->
+        referenceSimpleFunction(descriptor)
+    is PropertyDescriptor ->
+        referenceProperty(descriptor)
+    else ->
+        throw AssertionError("Unexpected member descriptor: $descriptor")
+}
+
+fun SymbolTable.findOrDeclareExternalPackageFragment(descriptor: PackageFragmentDescriptor) =
+    referenceExternalPackageFragment(descriptor).also {
+        if (!it.isBound) {
+            declareExternalPackageFragment(descriptor)
+        }
+    }.owner
+

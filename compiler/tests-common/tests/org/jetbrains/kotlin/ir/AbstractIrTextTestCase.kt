@@ -63,7 +63,7 @@ abstract class AbstractIrTextTestCase : AbstractIrGeneratorTestCase() {
             irModule.descriptor,
             SymbolTable(), // TODO
             myEnvironment.configuration.languageVersionSettings,
-            deserializer = null // TODO
+            deserializer = EmptyDeserializer
         )
 
         val path = wholeFile.path
