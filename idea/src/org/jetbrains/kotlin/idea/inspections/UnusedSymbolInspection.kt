@@ -66,6 +66,7 @@ import org.jetbrains.kotlin.idea.search.usagesSearch.getClassNameForCompanionObj
 import org.jetbrains.kotlin.idea.stubindex.KotlinSourceFilterScope
 import org.jetbrains.kotlin.idea.util.ProjectRootsUtil
 import org.jetbrains.kotlin.idea.util.hasActualsFor
+import org.jetbrains.kotlin.idea.util.textRangeIn
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
@@ -226,17 +227,14 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
             if (hasNonTrivialUsages(declaration, descriptor)) return
             if (declaration is KtClassOrObject && classOrObjectHasTextUsages(declaration)) return
 
-            val psiElement = declaration.nameIdentifier ?: (declaration as? KtConstructor<*>)?.getConstructorKeyword() ?: return
-            val problemDescriptor = holder.manager.createProblemDescriptor(
-                psiElement,
-                null,
+            val identifier = declaration.nameIdentifier ?: (declaration as? KtConstructor<*>)?.getConstructorKeyword() ?: return
+            holder.registerProblem(
+                declaration,
                 message,
                 ProblemHighlightType.LIKE_UNUSED_SYMBOL,
-                true,
+                identifier.textRangeIn(declaration),
                 *createQuickFixes(declaration).toTypedArray()
             )
-
-            holder.registerProblem(problemDescriptor)
         })
     }
 
@@ -508,10 +506,10 @@ class SafeDeleteFix(declaration: KtDeclaration) : LocalQuickFix {
     override fun startInWriteAction(): Boolean = false
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        val declaration = descriptor.psiElement.getStrictParentOfType<KtDeclaration>() ?: return
+        val declaration = descriptor.psiElement as? KtDeclaration ?: return
         if (!FileModificationService.getInstance().prepareFileForWrite(declaration.containingFile)) return
         if (declaration is KtParameter && declaration.parent is KtParameterList && declaration.parent?.parent is KtFunction) {
-            RemoveUnusedFunctionParameterFix(declaration).invoke(project, declaration.findExistingEditor(), declaration.containingKtFile)
+            RemoveUnusedFunctionParameterFix(declaration).invoke(project, null, declaration.containingKtFile)
         } else {
             ApplicationManager.getApplication().invokeLater(
                 { safeDelete(project, declaration) },
