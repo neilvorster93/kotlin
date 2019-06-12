@@ -152,7 +152,7 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
             return FEW_OCCURRENCES
         }
 
-        private fun KtProperty.isSerializationImplicitlyUsedField(): Boolean {
+        fun KtProperty.isSerializationImplicitlyUsedField(): Boolean {
             val ownerObject = getNonStrictParentOfType<KtClassOrObject>()
             if (ownerObject is KtObjectDeclaration && ownerObject.isCompanion()) {
                 val lightClass = ownerObject.getNonStrictParentOfType<KtClass>()?.toLightClass() ?: return false
@@ -161,7 +161,7 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
             return false
         }
 
-        private fun KtNamedFunction.isSerializationImplicitlyUsedMethod(): Boolean =
+        fun KtNamedFunction.isSerializationImplicitlyUsedMethod(): Boolean =
             toLightMethods().any { JavaHighlightUtil.isSerializationRelatedMethod(it, it.containingClass) }
 
         // variation of IDEA's AnnotationUtil.checkAnnotatedUsingPatterns()
