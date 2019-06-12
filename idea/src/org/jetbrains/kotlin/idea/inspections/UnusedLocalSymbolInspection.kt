@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.idea.util.textRangeIn
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 import org.jetbrains.kotlin.psi.psiUtil.isPrivate
+import org.jetbrains.kotlin.psi.psiUtil.isPrivateNestedClassOrObject
 
 class UnusedLocalSymbolInspection : AbstractKotlinInspection() {
     override fun runForWholeFile(): Boolean = true
@@ -31,6 +32,9 @@ class UnusedLocalSymbolInspection : AbstractKotlinInspection() {
 
         if (declaration is KtProperty && declaration.isSerializationImplicitlyUsedField()) return
         if (declaration is KtNamedFunction && declaration.isSerializationImplicitlyUsedMethod()) return
+
+        // TODO: remove after fix KT-31934
+        if (checkPrivateDeclaration(declaration)) return
 
         // properties can be referred by component1/component2, which is too expensive to search, don't mark them as unused
         if (declaration is KtParameter && declaration.dataClassComponentFunction() != null) return
@@ -60,4 +64,15 @@ private fun KtNamedDeclaration.isUsed(): Boolean {
     }
 }
 
+private fun checkPrivateDeclaration(declaration: KtNamedDeclaration): Boolean {
+    if (!declaration.isPrivateNestedClassOrObject) return false
 
+    var hasMatch = false
+    declaration.containingKtFile.importList?.acceptChildren(simpleNameExpressionRecursiveVisitor {
+        if (it.getReferencedName() == declaration.name) {
+            hasMatch = true
+        }
+    })
+
+    return hasMatch
+}
