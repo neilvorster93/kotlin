@@ -121,7 +121,7 @@ allprojects {
     }
 }
 
-// TODO: These classes should be omitted once Gradle plugin supports local.properties
+// TODO: These classes should be omitted once Idea Gradle plugin supports local.properties
 class LocalBuildPropertiesProvider(private val project: Project) {
     private val localProperties: Properties = Properties()
 
