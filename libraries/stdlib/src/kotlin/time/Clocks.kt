@@ -8,7 +8,7 @@ package kotlin.time
 import kotlin.js.JsName
 
 /**
- * The most precise clock available in the platform, whose readings increase monotonically over time.
+ * The most precise clock available in the platform. Its readings increase monotonically over time.
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
@@ -59,7 +59,7 @@ public abstract class AbstractDoubleClock(protected val unit: DurationUnit) : Cl
 }
 
 /**
- * A clock, whose readings can be preset and changed manually. It is useful as a predictable source of time in tests.
+ * A clock that has programmatically updatable readings. It is useful as a predictable source of time in tests.
  *
  * @param reading The initial value of the clock reading.
  * @param unit The unit of time in which [reading] value is expressed.
