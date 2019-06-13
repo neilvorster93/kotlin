@@ -1850,7 +1850,7 @@
     />
 
     <localInspection implementationClass="org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection"
-                     displayName="Unused local symbol"
+                     displayName="Unused symbol"
                      groupPath="Kotlin"
                      groupName="Redundant constructs"
                      enabledByDefault="true"
