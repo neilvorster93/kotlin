@@ -16,17 +16,13 @@
 
 package org.jetbrains.kotlin.codegen
 
-import com.google.common.collect.Lists
-import org.jetbrains.kotlin.cfg.TailRecursionKind
 import org.jetbrains.kotlin.codegen.context.MethodContext
 import org.jetbrains.kotlin.codegen.coroutines.*
 import org.jetbrains.kotlin.codegen.state.GenerationState
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
-import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtSimpleNameExpression
-import org.jetbrains.kotlin.psi.ValueArgument
 import org.jetbrains.kotlin.resolve.calls.callUtil.*
 import org.jetbrains.kotlin.resolve.calls.model.*
 import org.jetbrains.org.objectweb.asm.Type
@@ -81,6 +77,7 @@ class TailRecursionCodegen(
         callableMethod: CallableMethod,
         valueArguments: List<ResolvedValueArgument>
     ) {
+        val pendingDefaultInitializersInReverseOrder = arrayListOf<() -> Unit>()
         val types = callableMethod.valueParameterTypes
         loop@ for (parameterDescriptor in fd.valueParameters.asReversed()) {
             val arg = valueArguments[parameterDescriptor.index]
@@ -102,7 +99,11 @@ class TailRecursionCodegen(
                 }
                 is DefaultValueArgument -> {
                     AsmUtil.pop(v, type)
-                    DefaultParameterValueLoader.DEFAULT.genValue(parameterDescriptor, codegen).put(type, v)
+                    pendingDefaultInitializersInReverseOrder.add {
+                        DefaultParameterValueLoader.DEFAULT.genValue(parameterDescriptor, codegen).put(type, v)
+                        store(parameterDescriptor, type)
+                    }
+                    continue@loop
                 }
                 is VarargValueArgument -> {
                     // assign the parameter below
@@ -111,6 +112,10 @@ class TailRecursionCodegen(
             }
 
             store(parameterDescriptor, type)
+        }
+
+        for (defaultInitializer in pendingDefaultInitializersInReverseOrder.reversed()) {
+            defaultInitializer()
         }
     }
 

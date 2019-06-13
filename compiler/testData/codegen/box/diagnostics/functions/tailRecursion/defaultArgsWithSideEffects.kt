@@ -1,5 +1,4 @@
 // DONT_RUN_GENERATED_CODE: JS
-// IGNORE_BACKEND: JVM
 
 var counter = 0
 fun inc() = counter++
