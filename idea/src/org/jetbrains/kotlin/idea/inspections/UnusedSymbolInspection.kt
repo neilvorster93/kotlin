@@ -23,11 +23,13 @@ import org.jetbrains.kotlin.psi.psiUtil.isPrivateNestedClassOrObject
 class UnusedSymbolInspection : AbstractKotlinInspection() {
     override fun runForWholeFile(): Boolean = true
 
+    override val suppressionKey: String get() = "unused"
+
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean) = namedDeclarationVisitor(fun(declaration: KtNamedDeclaration) {
         if (!checkVisibility(declaration)) return
         if (!ProjectRootsUtil.isInProjectSource(declaration)) return
 
-        if (declaration.annotations.isNotEmpty()) return
+        if (declaration.annotationEntries.isNotEmpty()) return
         if (declaration is KtProperty && declaration.isLocal) return
         if (declaration is KtEnumEntry) return
         if (declaration is KtObjectDeclaration && declaration.isCompanion()) return // never mark companion object as unused (there are too many reasons it can be needed for)
