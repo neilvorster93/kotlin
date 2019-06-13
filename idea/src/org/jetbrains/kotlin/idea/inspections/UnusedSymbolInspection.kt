@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.idea.inspections
 
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.psi.PsiReference
 import com.intellij.psi.search.searches.ReferencesSearch
 import org.jetbrains.kotlin.idea.inspections.UnusedSymbolGlobalInspection.Companion.isSerializationImplicitlyUsedField
 import org.jetbrains.kotlin.idea.inspections.UnusedSymbolGlobalInspection.Companion.isSerializationImplicitlyUsedMethod
@@ -27,8 +28,8 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
         if (!ProjectRootsUtil.isInProjectSource(declaration)) return
 
         if (declaration.annotations.isNotEmpty()) return
-        if (declaration is KtClassOrObject && declaration.isTopLevel()) return // Private top-level class may be used in non-Kotlin JVM code
         if (declaration is KtProperty && declaration.isLocal) return
+        if (declaration is KtEnumEntry) return
         if (declaration is KtObjectDeclaration && declaration.isCompanion()) return // never mark companion object as unused (there are too many reasons it can be needed for)
 
         if (declaration is KtProperty && declaration.isSerializationImplicitlyUsedField()) return
@@ -54,15 +55,20 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
 }
 
 private fun checkVisibility(declaration: KtNamedDeclaration): Boolean = when {
+    declaration is KtClassOrObject && declaration.isTopLevel() -> false
     declaration.isPrivate() || declaration.parent is KtBlockExpression -> true
+    declaration is KtTypeParameter -> (declaration.parent.parent as? KtNamedDeclaration)?.let { checkVisibility(it) } ?: false
     else -> false
 }
 
 private fun KtNamedDeclaration.isUsed(): Boolean {
     val param = KotlinReferencesSearchParameters(this, useScope)
-    return ReferencesSearch.search(param).any {
-        !isAncestor(it.element)
-    }
+    return ReferencesSearch.search(param).any(fun(ref: PsiReference): Boolean {
+        if (isAncestor(ref.element)) return false // usages inside element's declaration are not counted
+
+        if (ref.element.parent is KtValueArgumentName) return false // usage of parameter in form of named argument is not counted
+        return true
+    })
 }
 
 private fun checkPrivateDeclaration(declaration: KtNamedDeclaration): Boolean {
