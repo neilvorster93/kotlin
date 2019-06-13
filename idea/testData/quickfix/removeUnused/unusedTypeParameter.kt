@@ -1,2 +1,3 @@
-// "Safe delete 'T'" "true"
-class UnusedTypeParameter<<caret>T, P>(val p: P)
+// "Safe delete 'T'" "false"
+// ACTION: Create test
+private class UnusedTypeParameter<<caret>T, P>(val p: P)

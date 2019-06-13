@@ -1,4 +1,4 @@
-// "Safe delete 'foo'" "true"
+// "Safe delete 'foo'" "false"
 // TOOL: org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection
 
 actual class My {

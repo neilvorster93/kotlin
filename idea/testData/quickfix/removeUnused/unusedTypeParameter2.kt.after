@@ -1,0 +1,2 @@
+// "Safe delete 'T'" "true"
+private fun <G> adad(t: G) = Unit

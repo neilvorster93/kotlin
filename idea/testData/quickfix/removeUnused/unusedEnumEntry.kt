@@ -1,4 +1,6 @@
-// "Safe delete 'WORLD'" "true"
+// "Safe delete 'WORLD'" "false"
+// ACTION: Add names to call arguments
+// ACTION: Do not show hints for current method
 enum class MyEnum(val i: Int) {
     HELLO(42),
     WORLD<caret>("42"),

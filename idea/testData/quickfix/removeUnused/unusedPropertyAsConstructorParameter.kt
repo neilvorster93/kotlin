@@ -1,2 +1,2 @@
 // "Safe delete 'property'" "true"
-class UnusedPropertyAsConstructorParameter(val <caret>property: String)
+class UnusedPropertyAsConstructorParameter(private val <caret>property: String)

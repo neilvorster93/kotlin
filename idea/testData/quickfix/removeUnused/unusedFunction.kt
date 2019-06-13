@@ -2,6 +2,6 @@
 fun dummy() {
 }
 
-fun <caret>unusedFun() {
+private fun <caret>unusedFun() {
 
 }

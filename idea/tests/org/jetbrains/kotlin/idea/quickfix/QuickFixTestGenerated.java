@@ -10223,6 +10223,11 @@ public class QuickFixTestGenerated extends AbstractQuickFixTest {
             runTest("idea/testData/quickfix/removeUnused/notTriangle.kt");
         }
 
+        @TestMetadata("privateNestedObject.kt")
+        public void testPrivateNestedObject() throws Exception {
+            runTest("idea/testData/quickfix/removeUnused/privateNestedObject.kt");
+        }
+
         @TestMetadata("secondaryLocalClassConstructor.kt")
         public void testSecondaryLocalClassConstructor() throws Exception {
             runTest("idea/testData/quickfix/removeUnused/secondaryLocalClassConstructor.kt");
@@ -10248,11 +10253,6 @@ public class QuickFixTestGenerated extends AbstractQuickFixTest {
             runTest("idea/testData/quickfix/removeUnused/typeAlias2.kt");
         }
 
-        @TestMetadata("unusedClass.kt")
-        public void testUnusedClass() throws Exception {
-            runTest("idea/testData/quickfix/removeUnused/unusedClass.kt");
-        }
-
         @TestMetadata("unusedConstructor.kt")
         public void testUnusedConstructor() throws Exception {
             runTest("idea/testData/quickfix/removeUnused/unusedConstructor.kt");
@@ -10271,26 +10271,6 @@ public class QuickFixTestGenerated extends AbstractQuickFixTest {
         @TestMetadata("unusedEnumEntry.kt")
         public void testUnusedEnumEntry() throws Exception {
             runTest("idea/testData/quickfix/removeUnused/unusedEnumEntry.kt");
-        }
-
-        @TestMetadata("unusedEnumEntry2.kt")
-        public void testUnusedEnumEntry2() throws Exception {
-            runTest("idea/testData/quickfix/removeUnused/unusedEnumEntry2.kt");
-        }
-
-        @TestMetadata("unusedEnumEntry3.kt")
-        public void testUnusedEnumEntry3() throws Exception {
-            runTest("idea/testData/quickfix/removeUnused/unusedEnumEntry3.kt");
-        }
-
-        @TestMetadata("unusedEnumEntry4.kt")
-        public void testUnusedEnumEntry4() throws Exception {
-            runTest("idea/testData/quickfix/removeUnused/unusedEnumEntry4.kt");
-        }
-
-        @TestMetadata("unusedEnumEntry5.kt")
-        public void testUnusedEnumEntry5() throws Exception {
-            runTest("idea/testData/quickfix/removeUnused/unusedEnumEntry5.kt");
         }
 
         @TestMetadata("unusedFunction.kt")
@@ -10316,6 +10296,11 @@ public class QuickFixTestGenerated extends AbstractQuickFixTest {
         @TestMetadata("unusedTypeParameter.kt")
         public void testUnusedTypeParameter() throws Exception {
             runTest("idea/testData/quickfix/removeUnused/unusedTypeParameter.kt");
+        }
+
+        @TestMetadata("unusedTypeParameter2.kt")
+        public void testUnusedTypeParameter2() throws Exception {
+            runTest("idea/testData/quickfix/removeUnused/unusedTypeParameter2.kt");
         }
 
         @TestMetadata("usedClassAsAlias.kt")
