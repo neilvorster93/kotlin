@@ -83,7 +83,7 @@ import java.util.*
 import javax.swing.JComponent
 import javax.swing.JPanel
 
-class UnusedSymbolInspection : AbstractKotlinInspection() {
+class UnusedSymbolGlobalInspection : AbstractKotlinInspection() {
     companion object {
         private val javaInspection = UnusedDeclarationInspection()
 

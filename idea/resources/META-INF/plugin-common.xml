@@ -1839,8 +1839,8 @@
                      language="kotlin"
     />
 
-    <localInspection implementationClass="org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection"
-                     displayName="Unused symbol"
+    <localInspection implementationClass="org.jetbrains.kotlin.idea.inspections.UnusedSymbolGlobalInspection"
+                     displayName="Unused symbol global"
                      groupPath="Kotlin"
                      groupName="Redundant constructs"
                      enabledByDefault="false"

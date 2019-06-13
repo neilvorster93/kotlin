@@ -89,7 +89,7 @@ class MemberVisibilityCanBePrivateInspection : AbstractKotlinInspection() {
         }
 
         val entryPointsManager = EntryPointsManager.getInstance(declaration.project) as EntryPointsManagerBase
-        if (UnusedSymbolInspection.checkAnnotatedUsingPatterns(
+        if (UnusedSymbolGlobalInspection.checkAnnotatedUsingPatterns(
                 declaration,
                 with(entryPointsManager) {
                     additionalAnnotations + ADDITIONAL_ANNOTATIONS

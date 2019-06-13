@@ -8,8 +8,8 @@ package org.jetbrains.kotlin.idea.inspections
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.search.searches.ReferencesSearch
-import org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection.Companion.isSerializationImplicitlyUsedField
-import org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection.Companion.isSerializationImplicitlyUsedMethod
+import org.jetbrains.kotlin.idea.inspections.UnusedSymbolGlobalInspection.Companion.isSerializationImplicitlyUsedField
+import org.jetbrains.kotlin.idea.inspections.UnusedSymbolGlobalInspection.Companion.isSerializationImplicitlyUsedMethod
 import org.jetbrains.kotlin.idea.search.ideaExtensions.KotlinReferencesSearchParameters
 import org.jetbrains.kotlin.idea.search.usagesSearch.dataClassComponentFunction
 import org.jetbrains.kotlin.idea.util.ProjectRootsUtil
@@ -27,6 +27,7 @@ class UnusedLocalSymbolInspection : AbstractKotlinInspection() {
         if (!ProjectRootsUtil.isInProjectSource(declaration)) return
 
         if (declaration.annotations.isNotEmpty()) return
+        if (declaration is KtClassOrObject && declaration.isTopLevel()) return // Private top-level class may be used in non-Kotlin JVM code
         if (declaration is KtProperty && declaration.isLocal) return
         if (declaration is KtObjectDeclaration && declaration.isCompanion()) return // never mark companion object as unused (there are too many reasons it can be needed for)
 
