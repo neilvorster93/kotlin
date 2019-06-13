@@ -1,6 +1,6 @@
-fun unusedFun() {
+private fun unusedFun() {
 
 }
 
 @Suppress("unused")
-fun unusedNoWarn() {}
+private fun unusedNoWarn() {}

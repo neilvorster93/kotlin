@@ -1,5 +1,5 @@
 class Klass {
-    val unused = ":("
+    private val unused = ":("
 }
 
 fun main(args: Array<String>) {

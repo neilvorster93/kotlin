@@ -1,4 +1,4 @@
-enum class MyEnum {
+private enum class MyEnum {
     A, B
 }
 

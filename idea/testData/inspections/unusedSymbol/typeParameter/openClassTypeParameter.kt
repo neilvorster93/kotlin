@@ -1,18 +1,18 @@
-interface Interface<T>
-interface Interface2<T>
-class A<T> : Interface2<T>
+private interface Interface<T>
+private interface Interface2<T>
+private class A<T> : Interface2<T>
 
-abstract class Abstract<T>
-abstract class Abstract2<T>
-class B<T> : Abstract2<T>()
+private abstract class Abstract<T>
+private abstract class Abstract2<T>
+private class B<T> : Abstract2<T>()
 
-sealed class Sealed<T>
-sealed class Sealed2<T>
-class C<T> : Sealed2<T>()
+private sealed class Sealed<T>
+private sealed class Sealed2<T>
+private class C<T> : Sealed2<T>()
 
-open class Open<T>
-open class Open2<T>
-class D<T> : Open2<T>()
+private open class Open<T>
+private open class Open2<T>
+private class D<T> : Open2<T>()
 
 fun main(args: Array<String>) {
     Interface::class

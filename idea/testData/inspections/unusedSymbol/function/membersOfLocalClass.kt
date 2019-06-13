@@ -4,14 +4,14 @@ fun main(args: Array<String>) {
         }
 
         @Suppress("unused")
-        fun fNoWarn() {}
+        private fun fNoWarn() {}
 
         val p = 5
     }
 
     @Suppress("unused")
     class OtherClass {
-        fun fNoWarn() {}
+        private fun fNoWarn() {}
     }
 
 
@@ -22,6 +22,6 @@ fun main(args: Array<String>) {
 @Suppress("unused")
 fun other() {
     class OtherClass {
-        fun fNoWarn() {}
+        private fun fNoWarn() {}
     }
 }

@@ -1,6 +1,6 @@
-inline class InlineClass(val x: Int)
+private inline class InlineClass(val x: Int)
 
 // Unused
-fun foo(arg: InlineClass) {
+private fun foo(arg: InlineClass) {
     arg.x.hashCode()
 }

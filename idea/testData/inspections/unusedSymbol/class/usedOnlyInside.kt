@@ -1,4 +1,4 @@
-class A {
+private class A {
     init {
         val x: A? = null
     }

@@ -1,16 +1,16 @@
 class Klass {
-    fun unusedFun() {
+    private fun unusedFun() {
     }
 
     @Suppress("unused")
-    fun unusedNoWarn() {
+    private fun unusedNoWarn() {
 
     }
 }
 
 @Suppress("unused")
 class OtherKlass {
-    fun unusedNoWarn() {
+    private fun unusedNoWarn() {
 
     }
 }

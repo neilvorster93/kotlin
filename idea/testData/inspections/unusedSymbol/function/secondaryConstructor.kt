@@ -4,7 +4,7 @@ class Owner(val name: String, val code: Int) {
 }
 
 @test.anno.EntryPoint
-fun use(): Int {
+private fun use(): Int {
     val owner = Owner("xyz")
     return if (owner.name != "") owner.code else -1
 }

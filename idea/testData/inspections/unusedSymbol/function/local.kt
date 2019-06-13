@@ -1,16 +1,16 @@
-fun outer() {
-    fun local() {
+private fun outer() {
+    private fun local() {
 
     }
 
     @Suppress("unused")
-    fun localNoWarn() {
+    private fun localNoWarn() {
 
     }
 }
 
 @Suppress("unused")
-fun otherFun() {
+private fun otherFun() {
     fun localNoWarn() {
 
     }

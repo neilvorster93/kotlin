@@ -1,8 +1,8 @@
-fun usedOnlyRecursively() {
+private fun usedOnlyRecursively() {
     usedOnlyRecursively()
 }
 
 @Suppress("unused")
-fun usedOnlyRecursivelyNoWarn() {
+private fun usedOnlyRecursivelyNoWarn() {
     usedOnlyRecursivelyNoWarn()
 }

@@ -1,1 +1,1 @@
-interface Interface
+private interface Interface

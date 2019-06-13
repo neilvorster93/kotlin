@@ -1,4 +1,4 @@
-object A {
+private object A {
     fun foo() {
         A.bar()
     }

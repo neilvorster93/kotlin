@@ -1,3 +1,3 @@
 package foo
 
-object UsedInTextByShortName
+private object UsedInTextByShortName

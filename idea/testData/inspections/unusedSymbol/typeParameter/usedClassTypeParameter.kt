@@ -1,4 +1,4 @@
-class UsedClassTypeParameter<T>(t: T) {
+private class UsedClassTypeParameter<T>(t: T) {
     {
         println(t)
     }

@@ -1,16 +1,16 @@
 package xxx
 
-import xxx.O1.foo
-import xxx.O2.bar
-
 object O1 {
-    fun foo(){}
+    private fun foo(){}
+    fun f() {
+        foo()
+    }
 }
 
 object O2 {
-    fun bar(){}
+    private fun bar(){}
 }
 
-fun f() {
+private fun f() {
     foo()
 }

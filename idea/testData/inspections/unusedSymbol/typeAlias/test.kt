@@ -1,6 +1,6 @@
-typealias MyString = String
+private typealias MyString = String
 
 // unused
-typealias YourString = String
+private typealias YourString = String
 
-val ms: MyString = ""
+private val ms: MyString = ""

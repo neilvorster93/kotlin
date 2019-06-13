@@ -1,1 +1,1 @@
-class A
+private class A

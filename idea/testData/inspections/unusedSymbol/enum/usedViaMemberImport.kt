@@ -21,7 +21,7 @@ enum class E4 {
     AAA4, BBB4
 }
 
-fun f() {
+private fun f() {
     print(AAA1)
     print(AAA2)
 }

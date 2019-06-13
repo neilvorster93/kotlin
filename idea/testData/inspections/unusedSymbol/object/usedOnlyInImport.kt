@@ -1,4 +1,4 @@
 import A
 
-object A {
+private object A {
 }

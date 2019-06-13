@@ -1,1 +1,1 @@
-object A
+private object A
