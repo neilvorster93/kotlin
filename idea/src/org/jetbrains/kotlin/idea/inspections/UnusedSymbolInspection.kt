@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 import org.jetbrains.kotlin.psi.psiUtil.isPrivate
 import org.jetbrains.kotlin.psi.psiUtil.isPrivateNestedClassOrObject
 
-class UnusedLocalSymbolInspection : AbstractKotlinInspection() {
+class UnusedSymbolInspection : AbstractKotlinInspection() {
     override fun runForWholeFile(): Boolean = true
 
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean) = namedDeclarationVisitor(fun(declaration: KtNamedDeclaration) {

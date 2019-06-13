@@ -1849,7 +1849,7 @@
                      language="kotlin"
     />
 
-    <localInspection implementationClass="org.jetbrains.kotlin.idea.inspections.UnusedLocalSymbolInspection"
+    <localInspection implementationClass="org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection"
                      displayName="Unused local symbol"
                      groupPath="Kotlin"
                      groupName="Redundant constructs"
