@@ -8,12 +8,7 @@ package org.jetbrains.kotlin.idea.inspections
 import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.codeInsight.FileModificationService
 import com.intellij.codeInsight.daemon.QuickFixBundle
-import com.intellij.codeInsight.daemon.impl.analysis.HighlightUtil
-import com.intellij.codeInsight.daemon.impl.analysis.JavaHighlightUtil
 import com.intellij.codeInspection.*
-import com.intellij.codeInspection.deadCode.UnusedDeclarationInspection
-import com.intellij.codeInspection.ex.EntryPointsManager
-import com.intellij.codeInspection.ex.EntryPointsManagerBase
 import com.intellij.codeInspection.ex.EntryPointsManagerImpl
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
@@ -25,7 +20,6 @@ import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiSearchHelper
-import com.intellij.psi.search.PsiSearchHelper.SearchCostResult
 import com.intellij.psi.search.PsiSearchHelper.SearchCostResult.*
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.DefinitionsScopedSearch
@@ -33,36 +27,31 @@ import com.intellij.psi.search.searches.MethodReferencesSearch
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.refactoring.safeDelete.SafeDeleteHandler
 import com.intellij.util.Processor
-import org.jetbrains.kotlin.asJava.LightClassUtil
 import org.jetbrains.kotlin.asJava.classes.KtLightClass
-import org.jetbrains.kotlin.asJava.toLightClass
 import org.jetbrains.kotlin.asJava.toLightMethods
 import org.jetbrains.kotlin.config.AnalysisFlags
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.idea.caches.project.implementingDescriptors
-import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.idea.caches.resolve.findModuleDescriptor
 import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.idea.core.isInheritable
-import org.jetbrains.kotlin.idea.core.script.ScriptsCompilationConfigurationUpdater
 import org.jetbrains.kotlin.idea.core.toDescriptor
 import org.jetbrains.kotlin.idea.findUsages.KotlinFindUsagesHandlerFactory
 import org.jetbrains.kotlin.idea.findUsages.handlers.KotlinFindClassUsagesHandler
 import org.jetbrains.kotlin.idea.imports.importableFqName
+import org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection.Companion.isCheapEnoughToSearchUsages
+import org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection.Companion.isEntryPoint
+import org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection.Companion.isSerializationImplicitlyUsedField
+import org.jetbrains.kotlin.idea.inspections.UnusedSymbolInspection.Companion.isSerializationImplicitlyUsedMethod
 import org.jetbrains.kotlin.idea.intentions.isFinalizeMethod
-import org.jetbrains.kotlin.idea.isMainFunction
 import org.jetbrains.kotlin.idea.project.languageVersionSettings
 import org.jetbrains.kotlin.idea.quickfix.RemoveUnusedFunctionParameterFix
 import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.idea.references.resolveMainReferenceToDescriptors
-import org.jetbrains.kotlin.idea.search.findScriptsWithUsages
 import org.jetbrains.kotlin.idea.search.ideaExtensions.KotlinReferencesSearchOptions
 import org.jetbrains.kotlin.idea.search.ideaExtensions.KotlinReferencesSearchParameters
-import org.jetbrains.kotlin.idea.search.isCheapEnoughToSearchConsideringOperators
 import org.jetbrains.kotlin.idea.search.projectScope
 import org.jetbrains.kotlin.idea.search.usagesSearch.dataClassComponentFunction
-import org.jetbrains.kotlin.idea.search.usagesSearch.getAccessorNames
-import org.jetbrains.kotlin.idea.search.usagesSearch.getClassNameForCompanionObject
 import org.jetbrains.kotlin.idea.stubindex.KotlinSourceFilterScope
 import org.jetbrains.kotlin.idea.util.ProjectRootsUtil
 import org.jetbrains.kotlin.idea.util.hasActualsFor
@@ -71,7 +60,6 @@ import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.*
-import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.isInlineClassType
@@ -84,111 +72,6 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 
 class UnusedSymbolGlobalInspection : AbstractKotlinInspection() {
-    companion object {
-        private val javaInspection = UnusedDeclarationInspection()
-
-        private val KOTLIN_ADDITIONAL_ANNOTATIONS = listOf("kotlin.test.*")
-
-        private fun KtDeclaration.hasKotlinAdditionalAnnotation() =
-            this is KtNamedDeclaration && checkAnnotatedUsingPatterns(this, KOTLIN_ADDITIONAL_ANNOTATIONS)
-
-        fun isEntryPoint(declaration: KtNamedDeclaration): Boolean {
-            if (declaration.hasKotlinAdditionalAnnotation()) return true
-            if (declaration is KtClass && declaration.declarations.any { it.hasKotlinAdditionalAnnotation() }) return true
-
-            // Some of the main-function-cases are covered by 'javaInspection.isEntryPoint(lightElement)' call
-            // but not all of them: light method for parameterless main still points to parameterless name
-            // that is not an actual entry point from Java language point of view
-            if (declaration.isMainFunction()) return true
-
-            val lightElement: PsiElement? = when (declaration) {
-                is KtClassOrObject -> declaration.toLightClass()
-                is KtNamedFunction, is KtSecondaryConstructor -> LightClassUtil.getLightClassMethod(declaration as KtFunction)
-                is KtProperty, is KtParameter -> {
-                    if (declaration is KtParameter && !declaration.hasValOrVar()) return false
-                    // can't rely on light element, check annotation ourselves
-                    val entryPointsManager = EntryPointsManager.getInstance(declaration.project) as EntryPointsManagerBase
-                    return checkAnnotatedUsingPatterns(
-                        declaration,
-                        entryPointsManager.additionalAnnotations + entryPointsManager.ADDITIONAL_ANNOTATIONS
-                    )
-                }
-                else -> return false
-            }
-
-            if (lightElement == null) return false
-
-            if (isCheapEnoughToSearchUsages(declaration) == TOO_MANY_OCCURRENCES) return false
-
-            return javaInspection.isEntryPoint(lightElement)
-        }
-
-        private fun isCheapEnoughToSearchUsages(declaration: KtNamedDeclaration): SearchCostResult {
-            val project = declaration.project
-            val psiSearchHelper = PsiSearchHelper.getInstance(project)
-
-            val usedScripts = findScriptsWithUsages(declaration)
-            if (usedScripts.isNotEmpty()) {
-                if (ScriptsCompilationConfigurationUpdater.getInstance(declaration.project).updateDependenciesIfNeeded(usedScripts)) {
-                    return TOO_MANY_OCCURRENCES
-                }
-            }
-
-            val useScope = psiSearchHelper.getUseScope(declaration)
-            if (useScope is GlobalSearchScope) {
-                var zeroOccurrences = true
-                for (name in listOf(declaration.name) + declaration.getAccessorNames() + listOfNotNull(declaration.getClassNameForCompanionObject())) {
-                    if (name == null) continue
-                    when (psiSearchHelper.isCheapEnoughToSearchConsideringOperators(name, useScope, null, null)) {
-                        ZERO_OCCURRENCES -> {
-                        } // go on, check other names
-                        FEW_OCCURRENCES -> zeroOccurrences = false
-                        TOO_MANY_OCCURRENCES -> return TOO_MANY_OCCURRENCES // searching usages is too expensive; behave like it is used
-                    }
-                }
-
-                if (zeroOccurrences) return ZERO_OCCURRENCES
-            }
-            return FEW_OCCURRENCES
-        }
-
-        fun KtProperty.isSerializationImplicitlyUsedField(): Boolean {
-            val ownerObject = getNonStrictParentOfType<KtClassOrObject>()
-            if (ownerObject is KtObjectDeclaration && ownerObject.isCompanion()) {
-                val lightClass = ownerObject.getNonStrictParentOfType<KtClass>()?.toLightClass() ?: return false
-                return lightClass.fields.any { it.name == name && HighlightUtil.isSerializationImplicitlyUsedField(it) }
-            }
-            return false
-        }
-
-        fun KtNamedFunction.isSerializationImplicitlyUsedMethod(): Boolean =
-            toLightMethods().any { JavaHighlightUtil.isSerializationRelatedMethod(it, it.containingClass) }
-
-        // variation of IDEA's AnnotationUtil.checkAnnotatedUsingPatterns()
-        fun checkAnnotatedUsingPatterns(
-            declaration: KtNamedDeclaration,
-            annotationPatterns: Collection<String>
-        ): Boolean {
-            if (declaration.annotationEntries.isEmpty()) return false
-            val context = declaration.analyze()
-            val annotationsPresent = declaration.annotationEntries.mapNotNull {
-                context[BindingContext.ANNOTATION, it]?.fqName?.asString()
-            }
-            if (annotationsPresent.isEmpty()) return false
-
-            for (pattern in annotationPatterns) {
-                val hasAnnotation = if (pattern.endsWith(".*")) {
-                    annotationsPresent.any { it.startsWith(pattern.dropLast(1)) }
-                } else {
-                    pattern in annotationsPresent
-                }
-                if (hasAnnotation) return true
-            }
-
-            return false
-        }
-    }
-
     override fun runForWholeFile() = true
 
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
@@ -262,8 +145,7 @@ class UnusedSymbolGlobalInspection : AbstractKotlinInspection() {
 
         val useScope = psiSearchHelper.getUseScope(declaration)
         val restrictedScope = if (useScope is GlobalSearchScope) {
-            val enoughToSearchUsages = isCheapEnoughToSearchUsages(declaration)
-            val zeroOccurrences = when (enoughToSearchUsages) {
+            val zeroOccurrences = when (isCheapEnoughToSearchUsages(declaration)) {
                 ZERO_OCCURRENCES -> true
                 FEW_OCCURRENCES -> false
                 TOO_MANY_OCCURRENCES -> return true // searching usages is too expensive; behave like it is used
