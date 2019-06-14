@@ -74,9 +74,9 @@ object JvmBackendFacade {
         ).generateUnboundSymbolsAsDependencies()
 
         for (irFile in irModuleFragment.files) {
-            irFile.metadata!!.serializedIr = serializeIrFile(jvmBackendContext, irFile)
+            irFile.metadata?.serializedIr = serializeIrFile(jvmBackendContext, irFile)
             for (irClass in irFile.declarations.filterIsInstance<IrClass>()) {
-                (irClass.metadata as MetadataSource.Class).serializedIr = serializeToplevelIrClass(jvmBackendContext, irClass)
+                (irClass.metadata as? MetadataSource.Class)?.serializedIr = serializeToplevelIrClass(jvmBackendContext, irClass)
             }
         }
 
