@@ -8,7 +8,10 @@ package kotlin.time
 import kotlin.js.JsName
 
 /**
- * The most precise clock available in the platform. Its readings increase monotonically over time.
+ * The most precise clock available in the platform.
+ *
+ * The clock returns its readings from a source of monotonic time when it is available in a target platform,
+ * and resorts to a non-monotonic time source otherwise.
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
