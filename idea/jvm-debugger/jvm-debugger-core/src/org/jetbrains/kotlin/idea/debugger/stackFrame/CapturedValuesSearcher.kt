@@ -38,7 +38,7 @@ private sealed class PendingValue {
     }
 
     class Container(val value: ObjectReference) : PendingValue() {
-        override fun getChildren(): List<PendingValue> {
+        override fun getChildren(): List<PendingValue>? {
             return value.referenceType().safeFields()
                 .filter { it.isApplicable() }
                 .mapNotNull { createPendingValue(this, it) }
@@ -54,7 +54,7 @@ private sealed class PendingValue {
         }
     }
 
-    open fun getChildren(): List<PendingValue> = emptyList()
+    open fun getChildren(): List<PendingValue>? = null
     abstract fun add(existingVariables: ExistingVariables): DescriptorData<out ValueDescriptorImpl>?
 }
 
@@ -85,7 +85,7 @@ private tailrec fun collectValues(queue: Deque<PendingValue>, consumer: MutableL
     while (queue.isNotEmpty()) {
         val value = queue.removeFirst() ?: break
         val children = value.getChildren()
-        if (children.isNotEmpty()) {
+        if (children != null) {
             deferred.addAll(children)
             continue
         }
