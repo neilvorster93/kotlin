@@ -1,6 +1,7 @@
 class Owner(val name: String, val code: Int) {
     constructor(name: String): this(name, 0)
-    constructor(code: Int): this("", code)
+    private constructor(code: Int): this("", code)
+    constructor(): this(42)
 }
 
 @test.anno.EntryPoint

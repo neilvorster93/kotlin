@@ -8,7 +8,14 @@ package org.jetbrains.kotlin.idea.inspections
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiReference
+import com.intellij.psi.search.searches.MethodReferencesSearch
 import com.intellij.psi.search.searches.ReferencesSearch
+import org.jetbrains.kotlin.asJava.toLightMethods
+import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.idea.inspections.UnusedSymbolGlobalInspection.Companion.isSerializationImplicitlyUsedField
 import org.jetbrains.kotlin.idea.inspections.UnusedSymbolGlobalInspection.Companion.isSerializationImplicitlyUsedMethod
 import org.jetbrains.kotlin.idea.search.ideaExtensions.KotlinReferencesSearchParameters
@@ -19,6 +26,7 @@ import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 import org.jetbrains.kotlin.psi.psiUtil.isPrivate
 import org.jetbrains.kotlin.psi.psiUtil.isPrivateNestedClassOrObject
+import org.jetbrains.kotlin.resolve.isInlineClassType
 
 class UnusedSymbolInspection : AbstractKotlinInspection() {
     override fun runForWholeFile(): Boolean = true
@@ -64,13 +72,40 @@ private fun checkVisibility(declaration: KtNamedDeclaration): Boolean = when {
 }
 
 private fun KtNamedDeclaration.isUsed(): Boolean {
-    val param = KotlinReferencesSearchParameters(this, useScope)
-    return ReferencesSearch.search(param).any(fun(ref: PsiReference): Boolean {
+    fun checkReference(ref: PsiReference): Boolean {
         if (isAncestor(ref.element)) return false // usages inside element's declaration are not counted
 
         if (ref.element.parent is KtValueArgumentName) return false // usage of parameter in form of named argument is not counted
         return true
-    })
+    }
+
+    val searchScope = useScope
+    if (this is KtCallableDeclaration && canBeHandledByLightMethods(resolveToDescriptorIfAny())) {
+        val lightMethods = toLightMethods()
+        if (lightMethods.isNotEmpty()) {
+            return lightMethods.any { method ->
+                MethodReferencesSearch.search(method, searchScope, true).any(::checkReference)
+            }
+        }
+    }
+
+    return ReferencesSearch.search(KotlinReferencesSearchParameters(this, searchScope)).any(::checkReference)
+}
+
+private fun canBeHandledByLightMethods(descriptor: DeclarationDescriptor?): Boolean = when (descriptor) {
+    null -> false
+    is ConstructorDescriptor -> {
+        val classDescriptor = descriptor.constructedClass
+        !classDescriptor.isInline && classDescriptor.visibility != Visibilities.LOCAL
+    }
+    !is FunctionDescriptor -> true
+    else -> !descriptor.hasInlineClassParameters()
+}
+
+private fun FunctionDescriptor.hasInlineClassParameters(): Boolean = when {
+    dispatchReceiverParameter?.type?.isInlineClassType() == true -> true
+    extensionReceiverParameter?.type?.isInlineClassType() == true -> true
+    else -> valueParameters.any { it.type.isInlineClassType() }
 }
 
 private fun checkPrivateDeclaration(declaration: KtNamedDeclaration): Boolean {
