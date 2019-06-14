@@ -10,6 +10,6 @@ class C : B {
     override fun foo(): Int = super.foo() as Int
 }
 
-// 0 equals
-// 0 hashCode
-// 0 toString
+// 0 equals\(
+// 0 hashCode\(
+// 0 toString\(

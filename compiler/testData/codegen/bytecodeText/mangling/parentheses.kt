@@ -18,5 +18,7 @@ fun box(): String {
 }
 
 // One instance of each is in kotlin.Metadata.d2
-// 1 \(X\)
-// 1 \(Y\)
+// The [^\\u0003] expression excludes mentions in the serialized IR
+
+// 1 [^\\u0003]\(X\)
+// 1 [^\\u0003]\(Y\)
